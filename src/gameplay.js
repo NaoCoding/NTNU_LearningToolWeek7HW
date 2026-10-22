@@ -1,5 +1,11 @@
 import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE, PLAYER_HEIGHT, PLAYER_RADIUS } from './world.js';
 
+export const VOID_FALL_THRESHOLD = -8;
+
+export function hasFallenIntoVoid(playerFeet) {
+  return playerFeet.y < VOID_FALL_THRESHOLD;
+}
+
 const MINING_TIMES = Object.freeze({
   dirt: 0.82,
   grass: 0.82,

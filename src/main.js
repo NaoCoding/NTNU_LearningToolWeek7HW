@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, hasFallenIntoVoid, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 import { advancePlayerVertical } from './physics.js';
 
@@ -10,6 +10,7 @@ const statusLabel = document.querySelector('#status');
 const helpLabel = document.querySelector('#help');
 const worldTimeLabel = document.querySelector('#world-time');
 const world = createIsland();
+const startingPosition = new THREE.Vector3(0.5, 2.65, 4.5);
 const hotbarTypes = ['grass', 'dirt', 'stone', 'log', 'leaves', 'planks', 'sand', 'brick'];
 let inventory = Object.fromEntries(hotbarTypes.map((type) => [type, 0]));
 let selectedSlot = 0;
@@ -19,7 +20,7 @@ scene.background = new THREE.Color('#bfe0f4');
 scene.fog = new THREE.Fog('#bfe0f4', 18, 45);
 
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 100);
-camera.position.set(0.5, 2.65, 4.5);
+camera.position.copy(startingPosition);
 camera.lookAt(0.5, 1.75, -4);
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
@@ -345,6 +346,12 @@ function tick() {
     camera.position.y = vertical.position.y + eyeHeight;
     verticalVelocity = vertical.velocityY;
     grounded = vertical.grounded;
+    if (hasFallenIntoVoid(vertical.position)) {
+      camera.position.copy(startingPosition);
+      verticalVelocity = 0;
+      grounded = true;
+      statusLabel.textContent = 'Returned to the starting point';
+    }
 
     const target = targetedBlock();
     if (miningHeld && target) {
