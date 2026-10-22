@@ -1,4 +1,5 @@
 import { addCottage } from './cottage.js';
+import { addBuildings } from './buildings.js';
 import { addTrees } from './trees.js';
 
 export const MAX_WORLD_SIZE = 32;
@@ -31,6 +32,7 @@ export function createIsland(width = 28, depth = 28) {
   }
   if (width >= 24 && depth >= 24) {
     addCottage(blocks);
+    addBuildings(blocks);
   }
   if (width >= 24 && depth >= 24) {
     addTrees(blocks);
