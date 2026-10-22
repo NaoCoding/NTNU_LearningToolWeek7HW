@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { canAnimalOccupy, createAnimalStates, updateAnimalMovement } from '../src/animal-motion.js';
+import { canAnimalOccupy, createAnimalStates, getAnimalPose, updateAnimalMovement } from '../src/animal-motion.js';
 
 function flatWorld(min = -4, max = 4) {
   const world = new Map();
@@ -43,4 +43,18 @@ test('animals do not walk off unsupported island edges', () => {
   const next = updateAnimalMovement(states, world, 2);
   assert.ok(canAnimalOccupy(world, next[0]));
   assert.ok(next[0].x < 1.8);
+});
+
+test('moving rabbits hop and both animals animate their legs', () => {
+  const rabbitPose = getAnimalPose({ type: 'rabbit', moving: true, phase: 0 }, Math.PI / 18);
+  const chickenPose = getAnimalPose({ type: 'chicken', moving: true, phase: 0 }, Math.PI / 18);
+  assert.ok(rabbitPose.hopY > 0);
+  assert.equal(chickenPose.hopY, 0);
+  assert.notEqual(rabbitPose.leftLegX, 0);
+  assert.notEqual(rabbitPose.rightLegX, 0);
+  assert.notEqual(chickenPose.leftLegX, 0);
+  assert.notEqual(chickenPose.rightLegX, 0);
+  assert.deepEqual(getAnimalPose({ type: 'rabbit', moving: false, phase: 0 }, 1), {
+    hopY: 0, leftLegX: 0, rightLegX: 0,
+  });
 });
