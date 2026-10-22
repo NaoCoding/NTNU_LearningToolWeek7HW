@@ -1,4 +1,4 @@
-import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE } from './world.js';
+import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE, PLAYER_HEIGHT } from './world.js';
 
 const MINING_TIMES = Object.freeze({
   dirt: 0.82,
@@ -121,4 +121,37 @@ export function placeBlock(world, hitKey, faceNormal, blockType, inventory, play
     key,
     inventory: { ...inventory, [blockType]: amount - 1 },
   };
+}
+
+export function toggleRain(isActive) {
+  return !isActive;
+}
+
+export function isSheltered(world, playerFeet) {
+  const x = Math.floor(playerFeet.x);
+  const z = Math.floor(playerFeet.z);
+  const firstRoofLayer = Math.floor(playerFeet.y + PLAYER_HEIGHT);
+  const { maxY } = getWorldBounds(world);
+  for (let y = firstRoofLayer; y <= maxY; y += 1) {
+    if (world.has(blockKey(x, y, z))) return true;
+  }
+  return false;
+}
+
+export function createRainParticle(world, x, y, z, feetY = 1) {
+  if (isSheltered(world, { x, y: feetY, z })) return null;
+  return { x, y, z, velocityY: -8 };
+}
+
+export function updateRainParticles(particles, world, deltaSeconds, resetY = 8) {
+  const delta = Math.max(0, deltaSeconds);
+  return particles.map((particle) => {
+    const nextY = particle.y + particle.velocityY * delta;
+    const x = Math.floor(particle.x);
+    const z = Math.floor(particle.z);
+    for (let y = Math.floor(particle.y); y >= Math.floor(nextY); y -= 1) {
+      if (world.has(blockKey(x, y, z))) return { ...particle, y: resetY };
+    }
+    return { ...particle, y: nextY };
+  });
 }

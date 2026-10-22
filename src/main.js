@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, placeBlock, updateDrops } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
@@ -81,23 +81,24 @@ const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
 controls.minPolarAngle = Math.PI * 0.08;
 let gameStarted = false;
+const controlHint = 'WASD move · Space jump · Hold left to mine · Right to place · 1–8 select · R rain';
 startButton.addEventListener('click', () => {
   gameStarted = true;
   startButton.hidden = true;
-  helpLabel.textContent = 'WASD move · Space jump · Esc pause';
+  helpLabel.textContent = controlHint;
   statusLabel.textContent = 'Explore the island';
   controls.lock();
 });
 controls.addEventListener('lock', () => {
   gameStarted = true;
   startButton.hidden = true;
-  helpLabel.textContent = 'WASD move · Space jump · Esc pause';
+  helpLabel.textContent = controlHint;
   statusLabel.textContent = 'Explore the island';
 });
 controls.addEventListener('unlock', () => {
   gameStarted = false;
   startButton.hidden = false;
-  helpLabel.textContent = 'WASD move · Space jump · Click to resume';
+  helpLabel.textContent = 'Click to resume · ' + controlHint;
   statusLabel.textContent = 'Paused';
 });
 
@@ -107,6 +108,7 @@ let grounded = false;
 const eyeHeight = 1.65;
 addEventListener('keydown', (event) => {
   keys.add(event.code);
+  if (event.code === 'KeyR' && gameStarted && !event.repeat) setRain(toggleRain(rainEnabled));
   if (/^Digit[1-8]$/.test(event.code)) {
     selectedSlot = Number(event.code.slice(-1)) - 1;
     renderHotbar();
@@ -131,6 +133,49 @@ let crackStage = -1;
 let dropStates = [];
 const dropMeshes = new Map();
 const pickupAnimations = [];
+let rainEnabled = false;
+let rainStates = [];
+const rainCount = 160;
+const rainGeometry = new THREE.BufferGeometry();
+const rainPositions = new Float32Array(rainCount * 6);
+rainGeometry.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3).setUsage(THREE.DynamicDrawUsage));
+const rainMaterial = new THREE.LineBasicMaterial({ color: '#d8f4ff', transparent: true, opacity: 0.68, depthWrite: false });
+const rainLines = new THREE.LineSegments(rainGeometry, rainMaterial);
+rainLines.visible = false;
+scene.add(rainLines);
+
+function setRain(enabled) {
+  rainEnabled = enabled;
+  rainLines.visible = enabled;
+  if (enabled) {
+    rainStates = [];
+    let attempts = 0;
+    while (rainStates.length < rainCount && attempts < rainCount * 3) {
+      attempts += 1;
+      const x = camera.position.x + (Math.random() - 0.5) * 13;
+      const z = camera.position.z + (Math.random() - 0.5) * 13;
+      const particle = createRainParticle(world, x, camera.position.y + 5 + Math.random() * 3, z);
+      if (particle) rainStates.push(particle);
+    }
+    statusLabel.textContent = 'Rain started · R to stop';
+  } else statusLabel.textContent = 'Rain stopped';
+}
+
+function updateRain(deltaSeconds) {
+  if (!rainEnabled) return;
+  rainStates = updateRainParticles(rainStates, world, deltaSeconds, camera.position.y + 7);
+  rainStates.forEach((particle, index) => {
+    const offset = index * 6;
+    rainPositions[offset] = particle.x;
+    rainPositions[offset + 1] = particle.y;
+    rainPositions[offset + 2] = particle.z;
+    rainPositions[offset + 3] = particle.x - 0.025;
+    rainPositions[offset + 4] = particle.y - 0.24;
+    rainPositions[offset + 5] = particle.z - 0.025;
+  });
+  rainGeometry.setDrawRange(0, rainStates.length * 2);
+  rainGeometry.attributes.position.needsUpdate = true;
+}
 
 function renderHotbar() {
   hotbar.replaceChildren();
@@ -320,6 +365,7 @@ function tick() {
     }
   }
   updateDropMeshes(delta);
+  updateRain(delta);
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(tick);

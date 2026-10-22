@@ -7,7 +7,7 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 2 — Drops.** Spawn same-type drops and make them settle on the island. Verify: STEP 2. Three drop tests and the full suite pass.
 - [x] **Step 3 — Collection.** Collect only within range and add the matching inventory count. Verify: STEP 3. Three collection tests and the full suite pass.
 - [x] **Step 4 — Placement.** Place a selected block on a valid neighboring face, reject zero inventory, and decrement the count. Verify: STEP 4. Four placement tests and the full suite pass. The success and player-overlap cases target open space above the island.
-- [ ] **Step 5 — Rain.** Press R to toggle visible falling drops; shelter the player under the roof and keep rain out. Verify: STEP 5.
+- [x] **Step 5 — Rain.** Press R to toggle visible falling drops; shelter the player under the roof and keep rain out. Verify: STEP 5. Four rain/shelter tests and the full suite pass.
 - [ ] **Step 6 — Day/night.** Transition sky and world lighting through day and night, then repeat without changing world or inventory state. Verify: STEP 6.
 
 ## Plan changes
