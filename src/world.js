@@ -1,4 +1,5 @@
 import { addCottage } from './cottage.js';
+import { addTrees } from './trees.js';
 
 export const MAX_WORLD_SIZE = 32;
 export const PLAYER_RADIUS = 0.28;
@@ -43,6 +44,9 @@ export function createIsland(width = 28, depth = 28) {
       }
     }
     blocks.set(blockKey(treeX, 5, treeZ), 'leaves');
+  }
+  if (width >= 24 && depth >= 24) {
+    addTrees(blocks);
   }
   return blocks;
 }
