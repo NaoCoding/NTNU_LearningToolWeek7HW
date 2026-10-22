@@ -40,3 +40,15 @@ test('a block cannot be placed inside the player', () => {
   assert.equal(result.placed, false);
   assert.equal(result.reason, 'player-overlap');
 });
+
+test('a block cannot be placed immediately beside the player', () => {
+  const world = createIsland();
+  world.set(blockKey(0, 3, 0), 'stone');
+  const playerBesideTarget = { x: 0.5, y: 1, z: 0.5 };
+  const result = placeBlock(world, blockKey(0, 3, 0), { x: 1, y: 0, z: 0 }, 'stone', { stone: 1 }, playerBesideTarget);
+
+  assert.equal(result.placed, false);
+  assert.equal(result.reason, 'too-close');
+  assert.equal(getBlock(world, 1, 3, 0), undefined);
+  assert.equal(result.inventory.stone, 1);
+});
