@@ -7,7 +7,7 @@ export function blockKey(x, y, z) {
   return `${x},${y},${z}`;
 }
 
-export function createIsland(width = 12, depth = 12) {
+export function createIsland(width = 28, depth = 28) {
   if (!Number.isInteger(width) || !Number.isInteger(depth) || width < 4 || depth < 4 || width > MAX_WORLD_SIZE || depth > MAX_WORLD_SIZE) {
     throw new RangeError(`Island dimensions must be integers between 4 and ${MAX_WORLD_SIZE}.`);
   }

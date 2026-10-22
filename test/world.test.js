@@ -28,7 +28,7 @@ test('the island has a walkable grassy surface and solid earth below it', () => 
 });
 
 test('cached world bounds expand when a new edge block is placed', () => {
-  const blocks = createIsland();
+  const blocks = createIsland(12, 12);
   assert.equal(canOccupyPlayer(blocks, { x: 6.5, y: 1, z: 0.5 }), false);
 
   blocks.set(blockKey(6, 0, 0), 'grass');
