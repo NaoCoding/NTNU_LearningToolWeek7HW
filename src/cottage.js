@@ -48,7 +48,7 @@ export function addCottage(blocks) {
 
   for (const [x, y, z] of TOWER_STAIR_BLOCKS) {
     blocks.set(blockKey(x, y, z), 'planks');
-    for (let headroomY = y + 1; headroomY <= y + 2; headroomY += 1) {
+    for (let headroomY = y + 1; headroomY <= y + 3; headroomY += 1) {
       blocks.delete(blockKey(x, headroomY, z));
     }
   }
