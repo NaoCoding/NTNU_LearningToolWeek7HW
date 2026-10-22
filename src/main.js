@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, createDrop, updateDrops } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
@@ -117,6 +117,27 @@ let miningSession = null;
 let miningHeld = false;
 let crackMesh = null;
 let crackStage = -1;
+let dropStates = [];
+const dropMeshes = new Map();
+
+function spawnDrop(key, type) {
+  const state = createDrop(key, type);
+  const mesh = new THREE.Mesh(cube, materials[type]);
+  mesh.scale.setScalar(state.size);
+  mesh.position.set(state.x, state.y, state.z);
+  scene.add(mesh);
+  dropStates.push(state);
+  dropMeshes.set(state.id, mesh);
+}
+
+function updateDropMeshes(deltaSeconds) {
+  dropStates = updateDrops(dropStates, world, deltaSeconds);
+  for (const drop of dropStates) {
+    const mesh = dropMeshes.get(drop.id);
+    mesh.position.set(drop.x, drop.y, drop.z);
+    mesh.rotation.y = drop.rotation;
+  }
+}
 
 function targetedBlock() {
   controls.getDirection(look);
@@ -203,6 +224,7 @@ function tick() {
       statusLabel.textContent = `Mining ${target.type} · ${Math.round(result.progress * 100)}%`;
       if (result.complete) {
         world.delete(target.key);
+        spawnDrop(target.key, target.type);
         miningHeld = false;
         miningSession = null;
         clearCracks();
@@ -217,6 +239,7 @@ function tick() {
       if (target) statusLabel.textContent = 'Hold left click to mine';
     }
   }
+  updateDropMeshes(delta);
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(tick);

@@ -1,3 +1,5 @@
+import { blockKey, getWorldBounds } from './world.js';
+
 const MINING_TIMES = Object.freeze({
   dirt: 0.82,
   grass: 0.82,
@@ -27,4 +29,48 @@ export function advanceMining(session, deltaSeconds) {
 
 export function cancelMining() {
   return null;
+}
+
+let nextDropId = 1;
+export function createDrop(minedBlockKey, blockType) {
+  const [x, y, z] = minedBlockKey.split(',').map(Number);
+  return {
+    id: nextDropId++,
+    type: blockType,
+    x: x + 0.5,
+    y: y + 0.62,
+    z: z + 0.5,
+    size: 0.28,
+    velocityY: 1.8,
+    rotation: 0,
+    settled: false,
+  };
+}
+
+export function updateDrops(drops, blocks, deltaSeconds) {
+  const delta = Math.max(0, deltaSeconds);
+  const bounds = getWorldBounds(blocks);
+  return drops.map((drop) => {
+    const next = { ...drop, rotation: drop.rotation + delta * 1.4 };
+    if (drop.settled || delta === 0) return next;
+
+    const previousBottom = drop.y - drop.size / 2;
+    const velocityY = drop.velocityY - 9.8 * delta;
+    const candidateY = drop.y + velocityY * delta;
+    const blockX = Math.floor(drop.x);
+    const blockZ = Math.floor(drop.z);
+    let groundTop = null;
+    for (let blockY = Math.floor(previousBottom - 1e-6); blockY >= bounds.minY; blockY -= 1) {
+      if (blocks.has(blockKey(blockX, blockY, blockZ))) {
+        groundTop = blockY + 1;
+        break;
+      }
+    }
+
+    const candidateBottom = candidateY - drop.size / 2;
+    if (groundTop !== null && previousBottom >= groundTop - 1e-6 && candidateBottom <= groundTop) {
+      return { ...next, y: groundTop + drop.size / 2, velocityY: 0, settled: true };
+    }
+    return { ...next, y: candidateY, velocityY };
+  });
 }
