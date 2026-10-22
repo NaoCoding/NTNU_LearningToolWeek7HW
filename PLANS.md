@@ -12,9 +12,11 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 7 — Island and player safety fixes.** Expand the island footprint within the 32-block world limit; prevent near-player placement; stabilize vertical landing at island edges; respawn after falling into the void. Verify: regression tests and the full suite pass.
 - [x] **Step 8 — Island scenery and weather.** Build a cottage and path from supplied block textures, add ten varied trees, raise night light levels, and start with rain enabled. Verify: regression tests and the full suite pass.
 - [x] **Step 9 — Player movement and perspective.** Use fixed-size vertical physics substeps for consistent jumps, add a first/third-person toggle with a voxel avatar and visible first-person hand, and add Shift-to-run. Verify: regression tests and the full suite pass (40 tests).
+- [x] **Step 10 — Jump, avatar motion, and buildings.** Correct landing-height checks so a descending player stays airborne until contact; consume jump presses once; animate the first-person hand and third-person gait; track cursor pitch/yaw with the avatar and follow camera; add a two-story house and a small outbuilding. Verify: regression tests and the full suite pass (46 tests).
 
 ## Plan changes
 
 - Added Step 7 for the four requested gameplay fixes. The requested 50 × 50 × 50 example exceeds the fixed 32 × 32 × 32 course limit, so the default island footprint is 28 × 28 while remaining inside that limit.
 - Added Step 8 for the requested visual and atmosphere changes. The supplied pack contains block textures rather than house models or prop sprites, so the cottage, chimney, path, and varied trees are assembled from those blocks.
 - Added Step 9 for the requested jump feel, player model and perspective toggle, and running. The player model and visible hand are assembled from lightweight colored Three.js boxes, so no external assets or dependencies are needed.
+- Added Step 10 after follow-up play feedback. Airborne floor checks now require the floor surface to intersect the player's actual vertical sweep; the added buildings use supplied block textures and remain within the fixed world-size limit.
