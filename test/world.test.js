@@ -12,6 +12,13 @@ test('creates a finite island no larger than the homework world limit', () => {
   assert.ok(bounds.depth <= MAX_WORLD_SIZE);
 });
 
+test('the default island uses most of the available world footprint', () => {
+  const bounds = getWorldBounds(createIsland());
+
+  assert.equal(bounds.width, 28);
+  assert.equal(bounds.depth, 28);
+});
+
 test('the island has a walkable grassy surface and solid earth below it', () => {
   const blocks = createIsland();
 
