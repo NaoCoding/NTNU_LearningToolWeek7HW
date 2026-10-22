@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { canOccupyPlayer, createIsland } from './world.js';
+import { advanceMining, beginMining, cancelMining } from './gameplay.js';
+import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -46,21 +47,28 @@ const materials = {
   leaves: new THREE.MeshLambertMaterial({ map: texture('leaves'), transparent: true, alphaTest: 0.15 }),
 };
 const cube = new THREE.BoxGeometry(1, 1, 1);
-const meshes = [];
-for (const type of ['grass', 'dirt', 'stone', 'log', 'leaves']) {
-  const entries = [...world.entries()].filter(([, blockType]) => blockType === type);
-  const mesh = new THREE.InstancedMesh(cube, materials[type], entries.length);
-  mesh.userData.blockKeys = entries.map(([key]) => key);
-  const matrix = new THREE.Matrix4();
-  entries.forEach(([key], index) => {
-    const [x, y, z] = key.split(',').map(Number);
-    matrix.makeTranslation(x + 0.5, y + 0.5, z + 0.5);
-    mesh.setMatrixAt(index, matrix);
-  });
-  mesh.instanceMatrix.needsUpdate = true;
-  scene.add(mesh);
-  meshes.push(mesh);
+const blockTypes = ['grass', 'dirt', 'stone', 'log', 'leaves'];
+let meshes = [];
+function renderWorld() {
+  for (const mesh of meshes) scene.remove(mesh);
+  meshes = [];
+  for (const type of blockTypes) {
+    const entries = [...world.entries()].filter(([, blockType]) => blockType === type);
+    if (entries.length === 0) continue;
+    const mesh = new THREE.InstancedMesh(cube, materials[type], entries.length);
+    mesh.userData.blockKeys = entries.map(([key]) => key);
+    const matrix = new THREE.Matrix4();
+    entries.forEach(([key], index) => {
+      const [x, y, z] = key.split(',').map(Number);
+      matrix.makeTranslation(x + 0.5, y + 0.5, z + 0.5);
+      mesh.setMatrixAt(index, matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    scene.add(mesh);
+    meshes.push(mesh);
+  }
 }
+renderWorld();
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
@@ -99,6 +107,67 @@ addEventListener('keyup', (event) => keys.delete(event.code));
 const raycaster = new THREE.Raycaster();
 const look = new THREE.Vector3();
 const clock = new THREE.Clock();
+const crackTextures = Array.from({ length: 10 }, (_, index) => {
+  const map = textureLoader.load(`sky-island-assets/textures/16px/destroy_stage_${index}.png`);
+  map.magFilter = THREE.NearestFilter;
+  map.minFilter = THREE.NearestFilter;
+  return map;
+});
+let miningSession = null;
+let miningHeld = false;
+let crackMesh = null;
+let crackStage = -1;
+
+function targetedBlock() {
+  controls.getDirection(look);
+  raycaster.set(camera.position, look);
+  raycaster.far = 5;
+  const hit = raycaster.intersectObjects(meshes, false)[0];
+  if (!hit || hit.instanceId === undefined) return null;
+  const key = hit.object.userData.blockKeys[hit.instanceId];
+  return { key, type: getBlock(world, ...key.split(',').map(Number)), hit };
+}
+
+function clearCracks() {
+  if (crackMesh) scene.remove(crackMesh);
+  crackMesh = null;
+  crackStage = -1;
+}
+
+function showCracks(hit, progress) {
+  const stage = Math.min(9, Math.floor(progress * 10));
+  if (!crackMesh) {
+    crackMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.03, 1.03),
+      new THREE.MeshBasicMaterial({ map: crackTextures[stage], transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }),
+    );
+    crackMesh.renderOrder = 2;
+    scene.add(crackMesh);
+  }
+  if (stage !== crackStage) {
+    crackMesh.material.map = crackTextures[stage];
+    crackMesh.material.needsUpdate = true;
+    crackStage = stage;
+  }
+  const normal = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+  crackMesh.position.copy(hit.point).addScaledVector(normal, 0.014);
+  crackMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+}
+
+renderer.domElement.addEventListener('mousedown', (event) => {
+  if (event.button !== 0 || !gameStarted) return;
+  const target = targetedBlock();
+  if (!target) return;
+  miningHeld = true;
+  miningSession = beginMining(target.key, target.type);
+});
+addEventListener('mouseup', (event) => {
+  if (event.button !== 0 || !miningHeld) return;
+  miningHeld = false;
+  miningSession = cancelMining(miningSession);
+  clearCracks();
+});
+
 function tick() {
   const delta = Math.min(clock.getDelta(), 0.05);
   if (gameStarted) {
@@ -125,11 +194,28 @@ function tick() {
       verticalVelocity = 0;
     } else grounded = false;
 
-    controls.getDirection(look);
-    raycaster.set(camera.position, look);
-    raycaster.far = 5;
-    const hit = raycaster.intersectObjects(meshes, false)[0];
-    if (hit) statusLabel.textContent = 'Look around · Mining arrives next';
+    const target = targetedBlock();
+    if (miningHeld && target) {
+      if (miningSession?.blockKey !== target.key) miningSession = beginMining(target.key, target.type);
+      const result = advanceMining(miningSession, delta);
+      miningSession = result.session;
+      showCracks(target.hit, result.progress);
+      statusLabel.textContent = `Mining ${target.type} · ${Math.round(result.progress * 100)}%`;
+      if (result.complete) {
+        world.delete(target.key);
+        miningHeld = false;
+        miningSession = null;
+        clearCracks();
+        renderWorld();
+        statusLabel.textContent = 'Block mined';
+      }
+    } else {
+      if (miningSession) {
+        miningSession = cancelMining(miningSession);
+        clearCracks();
+      }
+      if (target) statusLabel.textContent = 'Hold left click to mine';
+    }
   }
   renderer.render(scene, camera);
 }
