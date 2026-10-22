@@ -8,6 +8,7 @@ import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
 import { PLAYER_MODEL_PARTS } from './avatar.js';
 import { togglePerspective } from './view-mode.js';
 import { consumeJumpRequest } from './player-input.js';
+import { getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -27,6 +28,7 @@ scene.fog = new THREE.Fog('#bfe0f4', 18, 45);
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 100);
 camera.position.copy(startingPosition);
 camera.lookAt(0.5, 1.75, -4);
+scene.add(camera);
 const thirdPersonCamera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
@@ -123,31 +125,42 @@ let grounded = false;
 let jumpRequested = false;
 const eyeHeight = 1.65;
 const avatar = new THREE.Group();
+const avatarParts = new Map();
+const avatarHead = new THREE.Group();
 for (const part of PLAYER_MODEL_PARTS) {
   const mesh = new THREE.Mesh(
     new THREE.BoxGeometry(...part.size),
     new THREE.MeshLambertMaterial({ color: part.color }),
   );
-  mesh.position.set(...part.position);
-  avatar.add(mesh);
+  if (part.name === 'head' || part.name === 'hair') {
+    mesh.position.set(part.position[0], part.position[1] - 1.61, part.position[2]);
+    avatarHead.add(mesh);
+  } else {
+    mesh.position.set(...part.position);
+    avatar.add(mesh);
+  }
+  avatarParts.set(part.name, mesh);
 }
+avatarHead.position.y = 1.61;
+avatar.add(avatarHead);
+avatarParts.set('head-group', avatarHead);
 avatar.visible = false;
 scene.add(avatar);
 
 const firstPersonHand = new THREE.Group();
 const sleeve = new THREE.Mesh(
-  new THREE.BoxGeometry(0.22, 0.34, 0.22),
+  new THREE.BoxGeometry(0.24, 0.36, 0.25),
   new THREE.MeshBasicMaterial({ color: '#168f92' }),
 );
-sleeve.position.y = -0.07;
+sleeve.position.y = -0.015;
 firstPersonHand.add(sleeve);
 const hand = new THREE.Mesh(
-  new THREE.BoxGeometry(0.2, 0.19, 0.23),
+  new THREE.BoxGeometry(0.21, 0.19, 0.25),
   new THREE.MeshBasicMaterial({ color: '#e8b98f' }),
 );
-hand.position.set(0, -0.31, -0.015);
+hand.position.set(0, -0.19, -0.015);
 firstPersonHand.add(hand);
-firstPersonHand.position.set(0.42, -0.31, -0.62);
+firstPersonHand.position.set(0.3, -0.02, -0.52);
 firstPersonHand.rotation.x = -0.2;
 firstPersonHand.rotation.z = -0.1;
 camera.add(firstPersonHand);
@@ -429,18 +442,30 @@ function tick() {
       if (target) statusLabel.textContent = 'Hold left click to mine';
     }
   }
+  controls.getDirection(look);
+  const moving = gameStarted && (keys.has('KeyW') || keys.has('KeyA') || keys.has('KeyS') || keys.has('KeyD'));
+  const running = keys.has('ShiftLeft') || keys.has('ShiftRight');
+  const motion = getAvatarMotion(clock.elapsedTime, moving, running, grounded, look.y);
+  avatarParts.get('left-arm').rotation.x = motion.leftArmX;
+  avatarParts.get('right-arm').rotation.x = motion.rightArmX;
+  avatarParts.get('left-leg').rotation.x = motion.leftLegX;
+  avatarParts.get('right-leg').rotation.x = motion.rightLegX;
+  avatarHead.rotation.x = motion.headPitch;
+  firstPersonHand.position.x = 0.3 + motion.handX;
+  firstPersonHand.position.y = -0.02 + motion.handY;
+  firstPersonHand.rotation.z = -0.1 + motion.handRotationZ;
   updateDropMeshes(delta);
   updateRain(delta);
   if (thirdPerson) {
-    controls.getDirection(look);
     const horizontalLength = Math.hypot(look.x, look.z) || 1;
     const directionX = look.x / horizontalLength;
     const directionZ = look.z / horizontalLength;
     const feetY = camera.position.y - eyeHeight;
     avatar.position.set(camera.position.x, feetY, camera.position.z);
     avatar.rotation.y = Math.atan2(directionX, -directionZ);
-    thirdPersonCamera.position.set(camera.position.x - directionX * 4.5, feetY + 2.65, camera.position.z - directionZ * 4.5);
-    thirdPersonCamera.lookAt(camera.position.x, feetY + 1.0, camera.position.z);
+    const pose = getThirdPersonCameraPose(camera.position, look);
+    thirdPersonCamera.position.set(pose.position.x, pose.position.y, pose.position.z);
+    thirdPersonCamera.lookAt(pose.target.x, pose.target.y, pose.target.z);
   }
   renderer.render(scene, thirdPerson ? thirdPersonCamera : camera);
 }
