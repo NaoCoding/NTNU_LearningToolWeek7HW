@@ -2,36 +2,91 @@ const blockKey = (x, y, z) => `${x},${y},${z}`;
 
 function addTwoStoryHouse(blocks) {
   const centerX = -7;
-  const centerZ = 5;
-  for (let z = centerZ - 2; z <= centerZ + 2; z += 1) {
-    for (let x = centerX - 2; x <= centerX + 2; x += 1) blocks.set(blockKey(x, 0, z), 'planks');
+  const centerZ = 4;
+  const minX = centerX - 4;
+  const maxX = centerX + 4;
+  const minZ = centerZ - 4;
+  const maxZ = centerZ + 4;
+
+  for (let z = minZ; z <= maxZ; z += 1) {
+    for (let x = minX; x <= maxX; x += 1) blocks.set(blockKey(x, 0, z), 'planks');
   }
+
+  const isWindow = (x, z, y) => y === 2 && (
+    (z === minZ && (x === centerX - 2 || x === centerX + 2)) ||
+    (z === maxZ && (x === centerX - 3 || x === centerX + 3)) ||
+    (x === minX && (z === centerZ - 2 || z === centerZ + 2)) ||
+    (x === maxX && (z === centerZ - 2 || z === centerZ + 2))
+  );
   for (let y = 1; y <= 3; y += 1) {
-    for (let x = centerX - 2; x <= centerX + 2; x += 1) {
-      for (const z of [centerZ - 2, centerZ + 2]) {
-        if (z === centerZ + 2 && x === centerX && y <= 2) continue;
-        blocks.set(blockKey(x, y, z), 'brick');
+    for (let x = minX; x <= maxX; x += 1) {
+      for (const z of [minZ, maxZ]) {
+        const isDoor = z === maxZ && (x === centerX || x === centerX + 1) && y <= 2;
+        if (isDoor) continue;
+        blocks.set(blockKey(x, y, z), isWindow(x, z, y) ? 'sand' : (Math.abs(x - centerX) === 4 && Math.abs(z - centerZ) === 4 ? 'stone' : 'brick'));
       }
     }
-    for (let z = centerZ - 1; z <= centerZ + 1; z += 1) {
-      for (const x of [centerX - 2, centerX + 2]) blocks.set(blockKey(x, y, z), 'brick');
+    for (let z = minZ + 1; z < maxZ; z += 1) {
+      for (const x of [minX, maxX]) {
+        blocks.set(blockKey(x, y, z), isWindow(x, z, y) ? 'sand' : 'stone');
+      }
     }
   }
-  for (let z = centerZ - 2; z <= centerZ + 2; z += 1) {
-    for (let x = centerX - 2; x <= centerX + 2; x += 1) blocks.set(blockKey(x, 4, z), 'planks');
+  blocks.set(blockKey(minX + 1, 2, centerZ - 2), 'sand');
+
+  for (let z = minZ + 1; z < maxZ; z += 1) {
+    for (let x = minX + 1; x < maxX; x += 1) {
+      const stairLane = z === centerZ && x >= minX + 1 && x <= centerX;
+      if (!stairLane) blocks.set(blockKey(x, 4, z), 'planks');
+    }
+  }
+  for (let step = 0; step < 4; step += 1) {
+    const x = minX + 1 + step;
+    const y = step + 1;
+    blocks.set(blockKey(x, y, centerZ), 'planks');
+    for (const z of [centerZ - 1, centerZ + 1]) blocks.set(blockKey(x, y + 1, z), 'log');
   }
   for (let y = 5; y <= 6; y += 1) {
-    for (let x = centerX - 2; x <= centerX + 2; x += 1) {
-      for (const z of [centerZ - 2, centerZ + 2]) blocks.set(blockKey(x, y, z), 'planks');
+    for (let x = minX; x <= maxX; x += 1) {
+      for (const z of [minZ, maxZ]) {
+        const upperDoor = z === maxZ && (x === centerX || x === centerX + 1);
+        if (upperDoor) continue;
+        const upperWindow = y === 6 && (x === centerX - 2 || x === centerX + 2);
+        blocks.set(blockKey(x, y, z), upperWindow ? 'sand' : 'planks');
+      }
     }
-    for (let z = centerZ - 1; z <= centerZ + 1; z += 1) {
-      for (const x of [centerX - 2, centerX + 2]) blocks.set(blockKey(x, y, z), 'planks');
+    for (let z = minZ + 1; z < maxZ; z += 1) {
+      for (const x of [minX, maxX]) {
+        const upperWindow = y === 6 && (z === centerZ - 2 || z === centerZ + 2);
+        blocks.set(blockKey(x, y, z), upperWindow ? 'sand' : 'planks');
+      }
     }
   }
-  for (let layer = 0; layer <= 1; layer += 1) {
-    for (let z = centerZ - 3 + layer; z <= centerZ + 3 - layer; z += 1) {
-      for (let x = centerX - 3 + layer; x <= centerX + 3 - layer; x += 1) {
-        blocks.set(blockKey(x, 7 + layer, z), 'brick');
+
+  for (let x = centerX - 2; x <= centerX + 2; x += 1) {
+    blocks.set(blockKey(x, 0, maxZ + 1), 'planks');
+    blocks.set(blockKey(x, 4, maxZ + 1), 'planks');
+    if (x === centerX - 2 || x === centerX + 2) {
+      for (let y = 1; y <= 3; y += 1) blocks.set(blockKey(x, y, maxZ + 1), 'log');
+      blocks.set(blockKey(x, 5, maxZ + 1), 'log');
+    }
+  }
+  for (let x = centerX - 2; x <= centerX + 2; x += 2) blocks.set(blockKey(x, 5, maxZ + 1), 'log');
+  for (let x = minX + 2; x < centerX; x += 1) {
+    blocks.set(blockKey(x, 5, centerZ + 1), 'log');
+  }
+  blocks.set(blockKey(centerX - 2, 5, centerZ + 1), 'planks');
+  for (let z = minZ - 1; z <= maxZ + 1; z += 1) {
+    for (let x = minX - 1; x <= maxX + 1; x += 1) {
+      blocks.set(blockKey(x, 7, z), 'brick');
+    }
+  }
+  for (let layer = 0; layer < 2; layer += 1) {
+    for (let z = minZ + layer; z <= maxZ - layer; z += 1) {
+      for (let x = minX + layer; x <= maxX - layer; x += 1) {
+        if (z === minZ + layer || z === maxZ - layer || x === minX + layer || x === maxX - layer) {
+          blocks.set(blockKey(x, 8 + layer, z), 'brick');
+        }
       }
     }
   }
