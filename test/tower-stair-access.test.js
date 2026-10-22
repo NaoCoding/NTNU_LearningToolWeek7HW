@@ -10,6 +10,14 @@ test('the cottage tower has an uninterrupted stair route from ground to its roof
     position = stepUpPlayerOnStairs(world, position, target) ?? target;
     assert.equal(position.y, 2 + step);
   }
+  for (const [x, y, z] of [
+    [10, 1, -9], [10, 2, -8], [10, 3, -7],
+    [10, 4, -6], [10, 5, -5], [10, 6, -4],
+  ]) {
+    for (let clearanceY = y + 1; clearanceY <= y + 3; clearanceY += 1) {
+      assert.equal(getBlock(world, x, clearanceY, z), undefined, `stair at ${x},${y},${z} needs three clear blocks above`);
+    }
+  }
   assert.equal(getBlock(world, 9, 6, -3), 'stone');
   assert.equal(position.y, 7);
 });
