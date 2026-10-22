@@ -20,6 +20,7 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 15 — More animated animals and clearer stairs.** Triple the island animals to twelve, make rabbits hop and both rabbits and chickens move their legs while walking, turn the main house stair route toward its center-facing entrance, and clear three blocks above every tower tread. Verify: regression tests and the full suite pass (64 tests).
 - [x] **Step 16 — Darker rain and night.** Lower ambient and sunlight levels at night; during rain, further dim those lights and darken the sky and fog. Verify: regression tests and the full suite pass (65 tests).
 - [x] **Step 17 — Island lanterns.** Add eight warm, wooden-post lanterns across the island edges and paths using Three.js geometry and low-range point lights. Verify: regression tests and the full suite pass (66 tests); all lantern posts have ground support and clear space above them.
+- [x] **Step 18 — Stronger lantern glow.** Increase the lantern point lights' peak intensity and radius so they visibly illuminate a wider area at night. Verify: regression tests and the full suite pass (67 tests).
 
 ## Plan changes
 
@@ -34,3 +35,4 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - Added Step 15 for the animal and stair follow-up. Updated the existing main-house stair assertions to cover the approved route change; rabbit hopping and animal leg movement are derived from deterministic movement state, and additional animals reuse the existing lightweight Three.js models.
 - Added Step 16 for the latest atmosphere request. Rain and night darkness are reflected in both scene lighting and the background/fog color, while clear midday lighting remains unchanged.
 - Added Step 17 for the lantern placement request. Eight lantern posts reuse supplied log materials and existing low-cost glow geometry, with no new assets or dependencies.
+- Added Step 18 for the lantern brightness follow-up. A shared tested light profile raises peak intensity to 3.6 and distance to 8 while retaining a zero intensity during daytime.
