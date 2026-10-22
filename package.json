@@ -1,0 +1,8 @@
+{
+  "name": "sky-island-week7",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
