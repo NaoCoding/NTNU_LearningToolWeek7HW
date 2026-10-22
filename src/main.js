@@ -143,7 +143,7 @@ let crackStage = -1;
 let dropStates = [];
 const dropMeshes = new Map();
 const pickupAnimations = [];
-let rainEnabled = false;
+let rainEnabled = DEFAULT_RAIN_ENABLED;
 let rainStates = [];
 const rainCount = 160;
 const rainGeometry = new THREE.BufferGeometry();
@@ -170,6 +170,7 @@ function setRain(enabled) {
     statusLabel.textContent = 'Rain started · R to stop';
   } else statusLabel.textContent = 'Rain stopped';
 }
+setRain(DEFAULT_RAIN_ENABLED);
 
 function updateRain(deltaSeconds) {
   if (!rainEnabled) return;
