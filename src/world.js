@@ -1,4 +1,4 @@
-import { addCottage } from './cottage.js';
+import { addCottage, isTowerStairBlock } from './cottage.js';
 import { addBuildings, isHouseStairBlock } from './buildings.js';
 import { addTrees } from './trees.js';
 
@@ -61,11 +61,9 @@ export function createIsland(width = 28, depth = 28) {
     }
   }
   if (width >= 24 && depth >= 24) {
+    addTrees(blocks);
     addCottage(blocks);
     addBuildings(blocks);
-  }
-  if (width >= 24 && depth >= 24) {
-    addTrees(blocks);
   }
   return blocks;
 }
@@ -127,5 +125,7 @@ export function stepUpPlayerOnStairs(blocks, currentPosition, targetPosition) {
   const stairX = Math.floor(targetPosition.x);
   const stairZ = Math.floor(targetPosition.z);
   const stairY = Math.floor(steppedPosition.y - 1e-6);
-  return isHouseStairBlock(stairX, stairY, stairZ) ? steppedPosition : null;
+  return isHouseStairBlock(stairX, stairY, stairZ) || isTowerStairBlock(stairX, stairY, stairZ)
+    ? steppedPosition
+    : null;
 }

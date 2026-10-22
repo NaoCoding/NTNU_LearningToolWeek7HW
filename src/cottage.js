@@ -1,5 +1,14 @@
 const blockKey = (x, y, z) => `${x},${y},${z}`;
 
+export const TOWER_STAIR_BLOCKS = [
+  [10, 1, -9], [10, 2, -8], [10, 3, -7],
+  [10, 4, -6], [10, 5, -5], [10, 6, -4],
+];
+
+export function isTowerStairBlock(x, y, z) {
+  return TOWER_STAIR_BLOCKS.some(([stairX, stairY, stairZ]) => stairX === x && stairY === y && stairZ === z);
+}
+
 export function addCottage(blocks) {
   const centerX = 7;
   for (let z = -3; z <= -1; z += 1) {
@@ -36,4 +45,12 @@ export function addCottage(blocks) {
     }
   }
   blocks.set(blockKey(centerX, 0, 1), 'sand');
+
+  for (const [x, y, z] of TOWER_STAIR_BLOCKS) {
+    blocks.set(blockKey(x, y, z), 'planks');
+    for (let headroomY = y + 1; headroomY <= y + 2; headroomY += 1) {
+      blocks.delete(blockKey(x, headroomY, z));
+    }
+  }
+  blocks.set(blockKey(10, 6, -3), 'planks');
 }
