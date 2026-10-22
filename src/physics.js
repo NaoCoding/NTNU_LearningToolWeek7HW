@@ -17,25 +17,33 @@ function supportAt(blocks, position, minTop, maxTop) {
 }
 
 export function advancePlayerVertical(blocks, position, velocityY, grounded, deltaSeconds) {
-  const delta = Math.max(0, deltaSeconds);
-  if (delta === 0) return { position: { ...position }, velocityY, grounded };
-  const currentSupport = supportAt(blocks, position, position.y - 0.04, position.y + 0.04);
-  if (grounded && velocityY <= 0 && currentSupport !== null) {
-    return { position: { ...position, y: currentSupport }, velocityY: 0, grounded: true };
-  }
-
-  const nextVelocityY = velocityY - 18 * delta;
-  const nextY = position.y + nextVelocityY * delta;
-  if (nextVelocityY <= 0) {
-    const landingY = supportAt(blocks, position, nextY - 1e-6, position.y + 1e-6);
-    if (landingY !== null) {
-      return { position: { ...position, y: landingY }, velocityY: 0, grounded: true };
+  let remaining = Math.max(0, deltaSeconds);
+  let result = { position: { ...position }, velocityY, grounded };
+  const substep = 1 / 120;
+  while (remaining > 1e-8) {
+    const delta = Math.min(substep, remaining);
+    const currentSupport = supportAt(blocks, result.position, result.position.y - 0.04, result.position.y + 0.04);
+    if (result.grounded && result.velocityY <= 0 && currentSupport !== null) {
+      result = { position: { ...result.position, y: currentSupport }, velocityY: 0, grounded: true };
+    } else {
+      const nextVelocityY = result.velocityY - 18 * delta;
+      const nextY = result.position.y + nextVelocityY * delta;
+      if (nextVelocityY <= 0) {
+        const landingY = supportAt(blocks, result.position, nextY - 1e-6, result.position.y + 1e-6);
+        if (landingY !== null) {
+          result = { position: { ...result.position, y: landingY }, velocityY: 0, grounded: true };
+        } else {
+          const candidate = { ...result.position, y: nextY };
+          if (canOccupyPlayer(blocks, candidate)) result = { position: candidate, velocityY: nextVelocityY, grounded: false };
+          else result = { position: { ...result.position }, velocityY: 0, grounded: currentSupport !== null };
+        }
+      } else {
+        const candidate = { ...result.position, y: nextY };
+        if (canOccupyPlayer(blocks, candidate)) result = { position: candidate, velocityY: nextVelocityY, grounded: false };
+        else result = { position: { ...result.position }, velocityY: 0, grounded: currentSupport !== null };
+      }
     }
+    remaining -= delta;
   }
-
-  const candidate = { ...position, y: nextY };
-  if (canOccupyPlayer(blocks, candidate)) {
-    return { position: candidate, velocityY: nextVelocityY, grounded: false };
-  }
-  return { position: { ...position }, velocityY: 0, grounded: currentSupport !== null };
+  return result;
 }
