@@ -1,7 +1,7 @@
 const blockKey = (x, y, z) => `${x},${y},${z}`;
 
 export const HOUSE_STAIR_BLOCKS = [
-  [-10, 1, 4], [-9, 2, 4], [-8, 3, 4], [-7, 4, 4],
+  [-7, 1, 7], [-7, 2, 6], [-7, 3, 5], [-7, 4, 4],
 ];
 
 export function isHouseStairBlock(x, y, z) {
@@ -51,14 +51,14 @@ function addTwoStoryHouse(blocks) {
 
   for (let z = minZ + 1; z < maxZ; z += 1) {
     for (let x = minX + 1; x < maxX; x += 1) {
-      const stairLane = z === centerZ && x >= minX + 1 && x <= centerX;
+      const stairLane = x === centerX && z >= centerZ && z < maxZ;
       if (!stairLane) blocks.set(blockKey(x, 4, z), 'planks');
     }
   }
   for (let step = 0; step < HOUSE_STAIR_BLOCKS.length; step += 1) {
-    const [x, y] = HOUSE_STAIR_BLOCKS[step];
-    blocks.set(blockKey(x, y, centerZ), 'planks');
-    for (const z of [centerZ - 1, centerZ + 1]) blocks.set(blockKey(x, y + 1, z), 'log');
+    const [x, y, z] = HOUSE_STAIR_BLOCKS[step];
+    blocks.set(blockKey(x, y, z), 'planks');
+    for (const railX of [x - 1, x + 1]) blocks.set(blockKey(railX, y + 1, z), 'log');
   }
   for (let y = 5; y <= 6; y += 1) {
     for (let x = minX; x <= maxX; x += 1) {
