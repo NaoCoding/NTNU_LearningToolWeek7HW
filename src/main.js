@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining, createDrop, updateDrops } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, updateDrops } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
@@ -8,6 +8,10 @@ const startButton = document.querySelector('#start');
 const statusLabel = document.querySelector('#status');
 const helpLabel = document.querySelector('#help');
 const world = createIsland();
+const hotbarTypes = ['grass', 'dirt', 'stone', 'log', 'leaves', 'planks', 'sand', 'brick'];
+let inventory = Object.fromEntries(hotbarTypes.map((type) => [type, 0]));
+let selectedSlot = 0;
+const hotbar = document.querySelector('#hotbar');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#bfe0f4');
 scene.fog = new THREE.Fog('#bfe0f4', 18, 45);
@@ -100,6 +104,10 @@ let grounded = false;
 const eyeHeight = 1.65;
 addEventListener('keydown', (event) => {
   keys.add(event.code);
+  if (/^Digit[1-8]$/.test(event.code)) {
+    selectedSlot = Number(event.code.slice(-1)) - 1;
+    renderHotbar();
+  }
   if (event.code === 'Space') event.preventDefault();
 });
 addEventListener('keyup', (event) => keys.delete(event.code));
@@ -119,6 +127,25 @@ let crackMesh = null;
 let crackStage = -1;
 let dropStates = [];
 const dropMeshes = new Map();
+const pickupAnimations = [];
+
+function renderHotbar() {
+  hotbar.replaceChildren();
+  hotbarTypes.forEach((type, index) => {
+    const slot = document.createElement('div');
+    slot.className = `slot${index === selectedSlot ? ' selected' : ''}`;
+    slot.setAttribute('role', 'img');
+    slot.setAttribute('aria-label', `${index + 1}: ${type}, ${inventory[type] ?? 0}`);
+    const icon = document.createElement('img');
+    icon.src = `sky-island-assets/icons/${type}.png`;
+    icon.alt = '';
+    const count = document.createElement('span');
+    count.textContent = String(inventory[type] ?? 0);
+    slot.append(icon, count);
+    hotbar.append(slot);
+  });
+}
+renderHotbar();
 
 function spawnDrop(key, type) {
   const state = createDrop(key, type);
@@ -136,6 +163,31 @@ function updateDropMeshes(deltaSeconds) {
     const mesh = dropMeshes.get(drop.id);
     mesh.position.set(drop.x, drop.y, drop.z);
     mesh.rotation.y = drop.rotation;
+  }
+  if (gameStarted && dropStates.length) {
+    const result = collectNearbyDrops(dropStates, camera.position, inventory);
+    dropStates = result.remainingDrops;
+    if (result.collected.length) {
+      inventory = result.inventory;
+      for (const drop of result.collected) {
+        const mesh = dropMeshes.get(drop.id);
+        dropMeshes.delete(drop.id);
+        pickupAnimations.push({ mesh, start: mesh.position.clone(), elapsed: 0, duration: 0.22, size: drop.size });
+      }
+      renderHotbar();
+      statusLabel.textContent = 'Block collected';
+    }
+  }
+  for (let index = pickupAnimations.length - 1; index >= 0; index -= 1) {
+    const animation = pickupAnimations[index];
+    animation.elapsed += deltaSeconds;
+    const progress = Math.min(1, animation.elapsed / animation.duration);
+    animation.mesh.position.lerpVectors(animation.start, camera.position, progress);
+    animation.mesh.scale.setScalar(animation.size * (1 - progress));
+    if (progress >= 1) {
+      scene.remove(animation.mesh);
+      pickupAnimations.splice(index, 1);
+    }
   }
 }
 

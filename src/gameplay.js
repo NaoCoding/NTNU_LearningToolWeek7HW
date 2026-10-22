@@ -74,3 +74,20 @@ export function updateDrops(drops, blocks, deltaSeconds) {
     return { ...next, y: candidateY, velocityY };
   });
 }
+
+export function collectNearbyDrops(drops, position, inventory, radius = 1.6) {
+  const nextInventory = { ...inventory };
+  const remainingDrops = [];
+  const collected = [];
+  const radiusSquared = radius * radius;
+  for (const drop of drops) {
+    const dx = drop.x - position.x;
+    const dy = drop.y - position.y;
+    const dz = drop.z - position.z;
+    if (dx * dx + dy * dy + dz * dz < radiusSquared) {
+      nextInventory[drop.type] = (nextInventory[drop.type] ?? 0) + 1;
+      collected.push(drop);
+    } else remainingDrops.push(drop);
+  }
+  return { remainingDrops, inventory: nextInventory, collected };
+}
