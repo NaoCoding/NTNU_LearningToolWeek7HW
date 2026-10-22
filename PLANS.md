@@ -18,6 +18,7 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 13 — House windows, stair access, and living scenery.** Cut window openings into both house floors and fit translucent glass; allow grounded movement to step up only on the house staircase; add gently animated voxel rabbits and chickens with low-resolution scene shadows. Verify: regression tests and the full suite pass (58 tests).
 - [x] **Step 14 — Animal wandering, tower access, and house doors.** Let animals wander while checking ground support, walls, nearby animals, and the player; add an external stair route onto the cottage tower; open a matching rear doorway in the main house. Verify: regression tests and the full suite pass (63 tests).
 - [x] **Step 15 — More animated animals and clearer stairs.** Triple the island animals to twelve, make rabbits hop and both rabbits and chickens move their legs while walking, turn the main house stair route toward its center-facing entrance, and clear three blocks above every tower tread. Verify: regression tests and the full suite pass (64 tests).
+- [x] **Step 16 — Darker rain and night.** Lower ambient and sunlight levels at night; during rain, further dim those lights and darken the sky and fog. Verify: regression tests and the full suite pass (65 tests).
 
 ## Plan changes
 
@@ -30,3 +31,4 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - Added Step 13 for the house and atmosphere follow-up. Window panes and animals use lightweight Three.js geometry; stair stepping is restricted to the house's marked treads. Shadows use a 512 × 512 directional shadow map to limit rendering cost.
 - Added Step 14 for movement and access follow-up. Animal movement uses short deterministic steps to avoid structures and island edges; the tower stair clears tree canopy from its headroom, and stair stepping recognizes only marked house/tower treads.
 - Added Step 15 for the animal and stair follow-up. Updated the existing main-house stair assertions to cover the approved route change; rabbit hopping and animal leg movement are derived from deterministic movement state, and additional animals reuse the existing lightweight Three.js models.
+- Added Step 16 for the latest atmosphere request. Rain and night darkness are reflected in both scene lighting and the background/fog color, while clear midday lighting remains unchanged.
