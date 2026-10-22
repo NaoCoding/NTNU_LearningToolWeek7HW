@@ -117,6 +117,9 @@ for (const detail of SCENERY_DETAILS) {
   if (detail.shape === 'cone') {
     geometry = new THREE.ConeGeometry(detail.radius, detail.height, 4);
     material = materials[detail.texture];
+  } else if (detail.shape === 'post') {
+    geometry = new THREE.BoxGeometry(...detail.size);
+    material = materials[detail.texture];
   } else if (detail.shape === 'octahedron') {
     geometry = new THREE.OctahedronGeometry(detail.radius, 0);
     material = new THREE.MeshBasicMaterial({ color: detail.color });
