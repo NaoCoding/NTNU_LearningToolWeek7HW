@@ -303,6 +303,8 @@ renderer.domElement.addEventListener('mousedown', (event) => {
       statusLabel.textContent = 'That space is occupied';
     } else if (result.reason === 'player-overlap') {
       statusLabel.textContent = 'Cannot place a block inside yourself';
+    } else if (result.reason === 'too-close') {
+      statusLabel.textContent = 'Cannot place a block so close to yourself';
     }
     return;
   }

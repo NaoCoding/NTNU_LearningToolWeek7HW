@@ -1,4 +1,4 @@
-import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE, PLAYER_HEIGHT } from './world.js';
+import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE, PLAYER_HEIGHT, PLAYER_RADIUS } from './world.js';
 
 const MINING_TIMES = Object.freeze({
   dirt: 0.82,
@@ -114,6 +114,12 @@ export function placeBlock(world, hitKey, faceNormal, blockType, inventory, play
   nextWorld.set(key, blockType);
   if (!canOccupyPlayer(nextWorld, playerFeet)) {
     return { placed: false, reason: 'player-overlap', inventory: { ...inventory } };
+  }
+  const closestX = Math.max(target.x - (playerFeet.x + PLAYER_RADIUS), playerFeet.x - PLAYER_RADIUS - (target.x + 1), 0);
+  const closestY = Math.max(target.y - (playerFeet.y + PLAYER_HEIGHT), playerFeet.y - (target.y + 1), 0);
+  const closestZ = Math.max(target.z - (playerFeet.z + PLAYER_RADIUS), playerFeet.z - PLAYER_RADIUS - (target.z + 1), 0);
+  if (closestX * closestX + closestY * closestY + closestZ * closestZ < 0.25) {
+    return { placed: false, reason: 'too-close', inventory: { ...inventory } };
   }
   world.set(key, blockType);
   return {
