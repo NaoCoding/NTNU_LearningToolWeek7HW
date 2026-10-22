@@ -48,7 +48,7 @@ export function getBlock(blocks, x, y, z) {
 
 export function getWorldBounds(blocks) {
   const cached = boundsCache.get(blocks);
-  if (cached) return cached;
+  if (cached?.mapSize === blocks.size) return cached;
   if (blocks.size === 0) return { width: 0, height: 0, depth: 0, minX: 0, maxX: -1, minY: 0, maxY: -1, minZ: 0, maxZ: -1 };
   const positions = [...blocks.keys()].map((key) => key.split(',').map(Number));
   const axes = [0, 1, 2].map((axis) => positions.map((position) => position[axis]));
@@ -59,6 +59,7 @@ export function getWorldBounds(blocks) {
     minX: Math.min(...axes[0]), maxX: Math.max(...axes[0]),
     minY: Math.min(...axes[1]), maxY: Math.max(...axes[1]),
     minZ: Math.min(...axes[2]), maxZ: Math.max(...axes[2]),
+    mapSize: blocks.size,
   };
   boundsCache.set(blocks, bounds);
   return bounds;
