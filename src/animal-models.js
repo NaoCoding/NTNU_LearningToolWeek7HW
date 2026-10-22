@@ -2,7 +2,7 @@ const part = (shape, position, size, color) => ({ shape, position, size, color }
 
 export const ANIMAL_MODELS = [
   {
-    type: 'rabbit', position: [6, 1, -3], phase: 0, castShadow: true,
+    type: 'rabbit', position: [3, 1, 3], phase: 0, castShadow: true,
     parts: [
       part('box', [0, 0.36, 0], [0.48, 0.34, 0.32], '#e7e0d2'),
       part('box', [0.22, 0.62, 0], [0.28, 0.28, 0.28], '#f4eddf'),

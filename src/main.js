@@ -11,6 +11,7 @@ import { consumeJumpRequest } from './player-input.js';
 import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
 import { SCENERY_DETAILS } from './scenery-details.js';
 import { ANIMAL_MODELS } from './animal-models.js';
+import { createAnimalStates, updateAnimalMovement } from './animal-motion.js';
 import { SHADOW_MAP_SIZE } from './visual-effects.js';
 
 const game = document.querySelector('#game');
@@ -153,6 +154,7 @@ const animalActors = ANIMAL_MODELS.map((animal) => {
   }
   return { group, phase: animal.phase };
 });
+let animalStates = createAnimalStates(ANIMAL_MODELS);
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
@@ -536,9 +538,15 @@ function tick() {
   firstPersonHand.rotation.z = -0.1 + motion.handRotationZ;
   updateDropMeshes(delta);
   updateRain(delta);
-  animalActors.forEach(({ group, phase }) => {
-    group.position.y = 1 + Math.sin(clock.elapsedTime * 2.2 + phase) * 0.025;
-    group.rotation.y = Math.sin(clock.elapsedTime * 0.7 + phase) * 0.08;
+  animalStates = updateAnimalMovement(animalStates, world, delta, [{
+    x: camera.position.x,
+    z: camera.position.z,
+    radius: 0.55,
+  }]);
+  animalActors.forEach(({ group, phase }, index) => {
+    const animal = animalStates[index];
+    group.position.set(animal.x, animal.y + Math.sin(clock.elapsedTime * 2.2 + phase) * 0.025, animal.z);
+    group.rotation.y = -animal.heading;
   });
   if (thirdPerson) {
     const feetY = camera.position.y - eyeHeight;
