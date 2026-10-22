@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, hasFallenIntoVoid, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
-import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
+import { blockKey, canOccupyPlayer, createIsland, getBlock, stepUpPlayerOnStairs } from './world.js';
 import { advancePlayerVertical, playerMovementSpeed } from './physics.js';
 import { worldLightLevelsAt } from './lighting.js';
 import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
@@ -430,8 +430,17 @@ function tick() {
       camera.position.z += (moveZ / moveLength) * speed;
     }
     const feet = { x: camera.position.x, y: camera.position.y - eyeHeight, z: camera.position.z };
-    if (!canOccupyPlayer(world, feet)) camera.position.set(before.x, camera.position.y, before.z);
-    else if (moveLength > 0) movementDirection = { x: moveX / moveLength, z: moveZ / moveLength };
+    let canMove = canOccupyPlayer(world, feet);
+    if (!canMove) {
+      const previousFeet = { x: before.x, y: before.y - eyeHeight, z: before.z };
+      const steppedFeet = grounded ? stepUpPlayerOnStairs(world, previousFeet, feet) : null;
+      if (steppedFeet) {
+        camera.position.y = steppedFeet.y + eyeHeight;
+        verticalVelocity = 0;
+        canMove = true;
+      } else camera.position.set(before.x, camera.position.y, before.z);
+    }
+    if (moveLength > 0 && canMove) movementDirection = { x: moveX / moveLength, z: moveZ / moveLength };
 
     const jump = consumeJumpRequest(jumpRequested, grounded);
     jumpRequested = jump.pending;

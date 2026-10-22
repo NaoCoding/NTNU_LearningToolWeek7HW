@@ -1,5 +1,5 @@
 import { addCottage } from './cottage.js';
-import { addBuildings } from './buildings.js';
+import { addBuildings, isHouseStairBlock } from './buildings.js';
 import { addTrees } from './trees.js';
 
 export const MAX_WORLD_SIZE = 32;
@@ -118,4 +118,14 @@ export function canOccupyPlayer(blocks, position) {
     }
   }
   return true;
+}
+
+export function stepUpPlayerOnStairs(blocks, currentPosition, targetPosition) {
+  if (canOccupyPlayer(blocks, targetPosition)) return null;
+  const steppedPosition = { ...targetPosition, y: currentPosition.y + 1 };
+  if (!canOccupyPlayer(blocks, steppedPosition)) return null;
+  const stairX = Math.floor(targetPosition.x);
+  const stairZ = Math.floor(targetPosition.z);
+  const stairY = Math.floor(steppedPosition.y - 1e-6);
+  return isHouseStairBlock(stairX, stairY, stairZ) ? steppedPosition : null;
 }
