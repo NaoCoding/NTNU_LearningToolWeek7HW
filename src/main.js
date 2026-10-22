@@ -3,6 +3,8 @@ import { PointerLockControls } from 'three/addons/controls/PointerLockControls.j
 import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, hasFallenIntoVoid, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 import { advancePlayerVertical } from './physics.js';
+import { worldLightLevelsAt } from './lighting.js';
+import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -386,11 +388,12 @@ renderer.setAnimationLoop(tick);
 function updateDayNight(elapsedSeconds) {
   const daylight = daylightAt(elapsedSeconds, 120);
   const darkness = 1 - daylight;
+  const lightLevels = worldLightLevelsAt(daylight);
   scene.background.copy(daySky).lerp(nightSky, darkness);
   scene.fog.color.copy(scene.background);
-  sunlight.intensity = 0.2 + daylight * 1.8;
+  sunlight.intensity = lightLevels.sunlight;
   sunlight.color.copy(daySun).lerp(nightSun, darkness);
-  hemisphere.intensity = 0.3 + daylight * 1.8;
+  hemisphere.intensity = lightLevels.hemisphere;
   const isDay = daylight >= 0.45;
   worldTimeLabel.textContent = isDay ? 'DAY' : 'NIGHT';
   worldTimeLabel.classList.toggle('night', !isDay);

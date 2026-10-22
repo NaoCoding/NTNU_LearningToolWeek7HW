@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { worldLightLevelsAt } from '../src/gameplay.js';
+import { worldLightLevelsAt } from '../src/lighting.js';
 
 test('night lighting keeps the island clearly visible while daytime remains bright', () => {
   const night = worldLightLevelsAt(0.1);

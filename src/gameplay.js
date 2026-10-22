@@ -1,6 +1,7 @@
 import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE, PLAYER_HEIGHT, PLAYER_RADIUS } from './world.js';
 
 export const VOID_FALL_THRESHOLD = -8;
+export const DEFAULT_RAIN_ENABLED = true;
 
 export function hasFallenIntoVoid(playerFeet) {
   return playerFeet.y < VOID_FALL_THRESHOLD;
