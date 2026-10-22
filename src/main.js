@@ -11,7 +11,7 @@ import { consumeJumpRequest } from './player-input.js';
 import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
 import { SCENERY_DETAILS } from './scenery-details.js';
 import { ANIMAL_MODELS } from './animal-models.js';
-import { createAnimalStates, updateAnimalMovement } from './animal-motion.js';
+import { createAnimalStates, getAnimalPose, updateAnimalMovement } from './animal-motion.js';
 import { SHADOW_MAP_SIZE } from './visual-effects.js';
 
 const game = document.querySelector('#game');
@@ -141,6 +141,7 @@ const animalActors = ANIMAL_MODELS.map((animal) => {
   const group = new THREE.Group();
   group.position.set(...animal.position);
   scene.add(group);
+  const legs = new Map();
   for (const detail of animal.parts) {
     const geometry = detail.shape === 'sphere'
       ? new THREE.SphereGeometry(0.5, 8, 6)
@@ -151,8 +152,9 @@ const animalActors = ANIMAL_MODELS.map((animal) => {
     mesh.castShadow = animal.castShadow;
     mesh.receiveShadow = true;
     group.add(mesh);
+    if (detail.limb) legs.set(detail.limb, mesh);
   }
-  return { group, phase: animal.phase };
+  return { group, legs };
 });
 let animalStates = createAnimalStates(ANIMAL_MODELS);
 
@@ -543,10 +545,13 @@ function tick() {
     z: camera.position.z,
     radius: 0.55,
   }]);
-  animalActors.forEach(({ group, phase }, index) => {
+  animalActors.forEach(({ group, legs }, index) => {
     const animal = animalStates[index];
-    group.position.set(animal.x, animal.y + Math.sin(clock.elapsedTime * 2.2 + phase) * 0.025, animal.z);
+    const pose = getAnimalPose(animal, clock.elapsedTime);
+    group.position.set(animal.x, animal.y + pose.hopY, animal.z);
     group.rotation.y = -animal.heading;
+    legs.get('left-leg').rotation.x = pose.leftLegX;
+    legs.get('right-leg').rotation.x = pose.rightLegX;
   });
   if (thirdPerson) {
     const feetY = camera.position.y - eyeHeight;

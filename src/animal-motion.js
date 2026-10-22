@@ -9,13 +9,27 @@ const TURN_OFFSETS = [0, Math.PI / 2, -Math.PI / 2, Math.PI / 4, -Math.PI / 4, M
 export function createAnimalStates(models) {
   return models.map((model, index) => ({
     type: model.type,
+    phase: model.phase ?? 0,
     x: model.position[0],
     y: model.position[1],
     z: model.position[2],
     heading: (model.phase ?? 0) + index * 0.71,
     turnTimer: 0.7 + index * 0.23,
     seed: (index + 1) * 2654435761 >>> 0,
+    moving: false,
   }));
+}
+
+export function getAnimalPose(state, elapsedSeconds) {
+  if (!state.moving) return { hopY: 0, leftLegX: 0, rightLegX: 0 };
+  const gait = Math.sin(elapsedSeconds * 10 + (state.phase ?? 0));
+  return {
+    hopY: state.type === 'rabbit'
+      ? Math.max(0, Math.sin(elapsedSeconds * 8 + (state.phase ?? 0))) * 0.34
+      : 0,
+    leftLegX: gait * 0.55,
+    rightLegX: -gait * 0.55,
+  };
 }
 
 function random(state) {
@@ -60,12 +74,14 @@ function moveAnimal(state, world, others, blockers, seconds) {
     };
     if (!canAnimalOccupy(world, candidate, others, blockers)) continue;
     candidate.heading = heading;
+    candidate.moving = Math.hypot(candidate.x - state.x, candidate.z - state.z) > 1e-8;
     if (offset !== 0) candidate.turnTimer = Math.max(candidate.turnTimer, 0.8);
     return candidate;
   }
 
   nextState.heading = (nextState.heading + Math.PI / 3) % (Math.PI * 2);
   nextState.turnTimer = 0.15;
+  nextState.moving = false;
   return nextState;
 }
 
