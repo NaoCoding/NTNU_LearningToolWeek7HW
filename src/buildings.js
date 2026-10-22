@@ -1,5 +1,13 @@
 const blockKey = (x, y, z) => `${x},${y},${z}`;
 
+export const HOUSE_STAIR_BLOCKS = [
+  [-10, 1, 4], [-9, 2, 4], [-8, 3, 4], [-7, 4, 4],
+];
+
+export function isHouseStairBlock(x, y, z) {
+  return HOUSE_STAIR_BLOCKS.some(([stairX, stairY, stairZ]) => stairX === x && stairY === y && stairZ === z);
+}
+
 function addTwoStoryHouse(blocks) {
   const centerX = -7;
   const centerZ = 4;
@@ -18,21 +26,28 @@ function addTwoStoryHouse(blocks) {
     (x === minX && (z === centerZ - 2 || z === centerZ + 2)) ||
     (x === maxX && (z === centerZ - 2 || z === centerZ + 2))
   );
+  const isUpperWindow = (x, z, y) => y === 6 && (
+    (z === minZ && (x === centerX - 2 || x === centerX + 2)) ||
+    (z === maxZ && (x === centerX - 2 || x === centerX + 2)) ||
+    (x === minX && (z === centerZ - 2 || z === centerZ + 2)) ||
+    (x === maxX && (z === centerZ - 2 || z === centerZ + 2))
+  );
   for (let y = 1; y <= 3; y += 1) {
     for (let x = minX; x <= maxX; x += 1) {
       for (const z of [minZ, maxZ]) {
         const isDoor = z === maxZ && (x === centerX || x === centerX + 1) && y <= 2;
         if (isDoor) continue;
-        blocks.set(blockKey(x, y, z), isWindow(x, z, y) ? 'sand' : (Math.abs(x - centerX) === 4 && Math.abs(z - centerZ) === 4 ? 'stone' : 'brick'));
+        if (isWindow(x, z, y)) continue;
+        blocks.set(blockKey(x, y, z), Math.abs(x - centerX) === 4 && Math.abs(z - centerZ) === 4 ? 'stone' : 'brick');
       }
     }
     for (let z = minZ + 1; z < maxZ; z += 1) {
       for (const x of [minX, maxX]) {
-        blocks.set(blockKey(x, y, z), isWindow(x, z, y) ? 'sand' : 'stone');
+        if (isWindow(x, z, y)) continue;
+        blocks.set(blockKey(x, y, z), 'stone');
       }
     }
   }
-  blocks.set(blockKey(minX + 1, 2, centerZ - 2), 'sand');
 
   for (let z = minZ + 1; z < maxZ; z += 1) {
     for (let x = minX + 1; x < maxX; x += 1) {
@@ -40,9 +55,8 @@ function addTwoStoryHouse(blocks) {
       if (!stairLane) blocks.set(blockKey(x, 4, z), 'planks');
     }
   }
-  for (let step = 0; step < 4; step += 1) {
-    const x = minX + 1 + step;
-    const y = step + 1;
+  for (let step = 0; step < HOUSE_STAIR_BLOCKS.length; step += 1) {
+    const [x, y] = HOUSE_STAIR_BLOCKS[step];
     blocks.set(blockKey(x, y, centerZ), 'planks');
     for (const z of [centerZ - 1, centerZ + 1]) blocks.set(blockKey(x, y + 1, z), 'log');
   }
@@ -51,14 +65,16 @@ function addTwoStoryHouse(blocks) {
       for (const z of [minZ, maxZ]) {
         const upperDoor = z === maxZ && (x === centerX || x === centerX + 1);
         if (upperDoor) continue;
-        const upperWindow = y === 6 && (x === centerX - 2 || x === centerX + 2);
-        blocks.set(blockKey(x, y, z), upperWindow ? 'sand' : 'planks');
+        const upperWindow = isUpperWindow(x, z, y);
+        if (upperWindow) continue;
+        blocks.set(blockKey(x, y, z), 'planks');
       }
     }
     for (let z = minZ + 1; z < maxZ; z += 1) {
       for (const x of [minX, maxX]) {
-        const upperWindow = y === 6 && (z === centerZ - 2 || z === centerZ + 2);
-        blocks.set(blockKey(x, y, z), upperWindow ? 'sand' : 'planks');
+        const upperWindow = isUpperWindow(x, z, y);
+        if (upperWindow) continue;
+        blocks.set(blockKey(x, y, z), 'planks');
       }
     }
   }
