@@ -13,7 +13,10 @@ function supportAt(blocks, position, minTop, maxTop) {
   for (let z = minZ; z <= maxZ; z += 1) {
     for (let x = minX; x <= maxX; x += 1) {
       for (let y = Math.floor(minTop - 1); y <= Math.floor(maxTop - 1e-6); y += 1) {
-        if (blocks.has(blockKey(x, y, z))) supportY = Math.max(supportY ?? -Infinity, y + 1);
+        const top = y + 1;
+        if (blocks.has(blockKey(x, y, z)) && top >= minTop - 1e-6 && top <= maxTop + 1e-6) {
+          supportY = Math.max(supportY ?? -Infinity, top);
+        }
       }
     }
   }

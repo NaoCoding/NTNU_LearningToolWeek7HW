@@ -7,6 +7,7 @@ import { worldLightLevelsAt } from './lighting.js';
 import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
 import { PLAYER_MODEL_PARTS } from './avatar.js';
 import { togglePerspective } from './view-mode.js';
+import { consumeJumpRequest } from './player-input.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -119,6 +120,7 @@ controls.addEventListener('unlock', () => {
 const keys = new Set();
 let verticalVelocity = 0;
 let grounded = false;
+let jumpRequested = false;
 const eyeHeight = 1.65;
 const avatar = new THREE.Group();
 for (const part of PLAYER_MODEL_PARTS) {
@@ -165,7 +167,10 @@ addEventListener('keydown', (event) => {
     selectedSlot = Number(event.code.slice(-1)) - 1;
     renderHotbar();
   }
-  if (event.code === 'Space') event.preventDefault();
+  if (event.code === 'Space') {
+    event.preventDefault();
+    if (!event.repeat) jumpRequested = true;
+  }
 });
 addEventListener('keyup', (event) => keys.delete(event.code));
 
@@ -382,7 +387,9 @@ function tick() {
     const feet = { x: camera.position.x, y: camera.position.y - eyeHeight, z: camera.position.z };
     if (!canOccupyPlayer(world, feet)) camera.position.set(before.x, camera.position.y, before.z);
 
-    if (grounded && keys.has('Space')) { verticalVelocity = 6.2; grounded = false; }
+    const jump = consumeJumpRequest(jumpRequested, grounded);
+    jumpRequested = jump.pending;
+    if (jump.shouldJump) { verticalVelocity = 6.2; grounded = false; }
     const vertical = advancePlayerVertical(world, {
       x: camera.position.x,
       y: camera.position.y - eyeHeight,
