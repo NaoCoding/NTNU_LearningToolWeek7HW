@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRainParticle, isSheltered, toggleRain, updateRainParticles } from '../src/gameplay.js';
-import { blockKey, createIsland } from '../src/world.js';
+import { blockKey, createIsland, getWorldBounds } from '../src/world.js';
 
 test('R toggles rain on and off', () => {
   assert.equal(toggleRain(false), true);
@@ -14,6 +14,14 @@ test('a solid roof shelters the player directly below it', () => {
 
   assert.equal(isSheltered(world, { x: 0.5, y: 1, z: 0.5 }), true);
   assert.equal(isSheltered(world, { x: 2.5, y: 1, z: 0.5 }), false);
+});
+
+test('shelter checks include roofs placed above the original canopy height', () => {
+  const world = createIsland();
+  getWorldBounds(world);
+  world.set(blockKey(0, 8, 0), 'planks');
+
+  assert.equal(isSheltered(world, { x: 0.5, y: 1, z: 0.5 }), true);
 });
 
 test('rain does not spawn below a roof', () => {
