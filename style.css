@@ -7,6 +7,8 @@ canvas { display: block; width: 100%; height: 100%; }
 .topline { display: flex; justify-content: space-between; align-items: center; padding: 22px 28px; letter-spacing: .1em; }
 .brand { font-size: 12px; font-weight: 800; letter-spacing: .22em; }
 #status { font: 12px 'DM Mono', monospace; color: #f3f8fc; }
+.world-time { position: absolute; left: 50%; transform: translateX(-50%); padding: 5px 9px; border: 1px solid #ffffff66; border-radius: 999px; background: #54748a66; font: 10px 'DM Mono', monospace; letter-spacing: .18em; }
+.world-time.night { background: #111d3ccc; border-color: #a8bbff88; }
 .crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%,-50%); }
 .crosshair::before, .crosshair::after { content: ''; position: absolute; background: #fff; border: 1px solid #28445399; border-radius: 2px; }
 .crosshair::before { width: 2px; height: 18px; left: 8px; }

@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
 const statusLabel = document.querySelector('#status');
 const helpLabel = document.querySelector('#help');
+const worldTimeLabel = document.querySelector('#world-time');
 const world = createIsland();
 const hotbarTypes = ['grass', 'dirt', 'stone', 'log', 'leaves', 'planks', 'sand', 'brick'];
 let inventory = Object.fromEntries(hotbarTypes.map((type) => [type, 0]));
@@ -25,10 +26,15 @@ renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = false;
 game.prepend(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight('#e8f6ff', '#715a3c', 2.1));
+const hemisphere = new THREE.HemisphereLight('#e8f6ff', '#715a3c', 2.1);
+scene.add(hemisphere);
 const sunlight = new THREE.DirectionalLight('#fff1cf', 2.0);
 sunlight.position.set(-8, 14, 7);
 scene.add(sunlight);
+const daySky = new THREE.Color('#bfe0f4');
+const nightSky = new THREE.Color('#101a38');
+const daySun = new THREE.Color('#fff1cf');
+const nightSun = new THREE.Color('#8296c7');
 
 const textureLoader = new THREE.TextureLoader();
 const textureCache = new Map();
@@ -316,6 +322,7 @@ addEventListener('mouseup', (event) => {
 
 function tick() {
   const delta = Math.min(clock.getDelta(), 0.05);
+  updateDayNight(clock.elapsedTime);
   if (gameStarted) {
     const forward = Number(keys.has('KeyW')) - Number(keys.has('KeyS'));
     const side = Number(keys.has('KeyD')) - Number(keys.has('KeyA'));
@@ -369,6 +376,20 @@ function tick() {
   renderer.render(scene, camera);
 }
 renderer.setAnimationLoop(tick);
+
+function updateDayNight(elapsedSeconds) {
+  const daylight = daylightAt(elapsedSeconds, 120);
+  const darkness = 1 - daylight;
+  scene.background.copy(daySky).lerp(nightSky, darkness);
+  scene.fog.color.copy(scene.background);
+  sunlight.intensity = 0.2 + daylight * 1.8;
+  sunlight.color.copy(daySun).lerp(nightSun, darkness);
+  hemisphere.intensity = 0.3 + daylight * 1.8;
+  const isDay = daylight >= 0.45;
+  worldTimeLabel.textContent = isDay ? 'DAY' : 'NIGHT';
+  worldTimeLabel.classList.toggle('night', !isDay);
+}
+updateDayNight(0);
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;

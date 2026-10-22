@@ -155,3 +155,9 @@ export function updateRainParticles(particles, world, deltaSeconds, resetY = 8) 
     return { ...particle, y: nextY };
   });
 }
+
+export function daylightAt(elapsedSeconds, cycleSeconds = 120) {
+  if (!Number.isFinite(elapsedSeconds) || !Number.isFinite(cycleSeconds) || cycleSeconds <= 0) return 1;
+  const phase = ((elapsedSeconds % cycleSeconds) + cycleSeconds) % cycleSeconds;
+  return 0.1 + 0.9 * (0.5 + 0.5 * Math.cos((2 * Math.PI * phase) / cycleSeconds));
+}

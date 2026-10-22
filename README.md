@@ -3,7 +3,7 @@
 Student ID: 41247001S
 Name: 盧昱安
 
-A static Three.js voxel island built in small, test-driven stages for the Week 7 engineering workflow.
+A static Three.js voxel island built in small, test-driven stages for the Week 7 engineering workflow. Mine and collect blocks, place them from the numbered hotbar, press R for rain, and watch the 2-minute day/night cycle.
 
 ## Project documents
 
