@@ -1,4 +1,4 @@
-import { blockKey, getWorldBounds } from './world.js';
+import { blockKey, canOccupyPlayer, getWorldBounds, MAX_WORLD_SIZE } from './world.js';
 
 const MINING_TIMES = Object.freeze({
   dirt: 0.82,
@@ -90,4 +90,35 @@ export function collectNearbyDrops(drops, position, inventory, radius = 1.6) {
     } else remainingDrops.push(drop);
   }
   return { remainingDrops, inventory: nextInventory, collected };
+}
+
+export function placeBlock(world, hitKey, faceNormal, blockType, inventory, playerFeet) {
+  const amount = inventory[blockType] ?? 0;
+  if (amount <= 0) return { placed: false, reason: 'empty-inventory', inventory: { ...inventory } };
+
+  const [x, y, z] = hitKey.split(',').map(Number);
+  const nx = Math.round(faceNormal.x);
+  const ny = Math.round(faceNormal.y);
+  const nz = Math.round(faceNormal.z);
+  if (Math.abs(nx) + Math.abs(ny) + Math.abs(nz) !== 1) {
+    return { placed: false, reason: 'invalid-face', inventory: { ...inventory } };
+  }
+  const target = { x: x + nx, y: y + ny, z: z + nz };
+  if (target.x < -MAX_WORLD_SIZE / 2 || target.x >= MAX_WORLD_SIZE / 2 || target.y < -MAX_WORLD_SIZE / 2 || target.y >= MAX_WORLD_SIZE / 2 || target.z < -MAX_WORLD_SIZE / 2 || target.z >= MAX_WORLD_SIZE / 2) {
+    return { placed: false, reason: 'world-limit', inventory: { ...inventory } };
+  }
+  const key = blockKey(target.x, target.y, target.z);
+  if (world.has(key)) return { placed: false, reason: 'occupied', inventory: { ...inventory } };
+
+  const nextWorld = new Map(world);
+  nextWorld.set(key, blockType);
+  if (!canOccupyPlayer(nextWorld, playerFeet)) {
+    return { placed: false, reason: 'player-overlap', inventory: { ...inventory } };
+  }
+  world.set(key, blockType);
+  return {
+    placed: true,
+    key,
+    inventory: { ...inventory, [blockType]: amount - 1 },
+  };
 }

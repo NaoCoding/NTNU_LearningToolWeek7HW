@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, updateDrops } from './gameplay.js';
+import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, placeBlock, updateDrops } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 
 const game = document.querySelector('#game');
@@ -47,11 +47,14 @@ const materials = {
   grass: [texture('grass_side'), texture('grass_side'), texture('grass_top'), texture('dirt'), texture('grass_side'), texture('grass_side')].map((map) => new THREE.MeshLambertMaterial({ map })),
   dirt: new THREE.MeshLambertMaterial({ map: texture('dirt') }),
   stone: new THREE.MeshLambertMaterial({ map: texture('stone') }),
+  planks: new THREE.MeshLambertMaterial({ map: texture('planks') }),
+  sand: new THREE.MeshLambertMaterial({ map: texture('sand') }),
+  brick: new THREE.MeshLambertMaterial({ map: texture('brick') }),
   log: [texture('log_side'), texture('log_side'), texture('log_top'), texture('log_top'), texture('log_side'), texture('log_side')].map((map) => new THREE.MeshLambertMaterial({ map })),
   leaves: new THREE.MeshLambertMaterial({ map: texture('leaves'), transparent: true, alphaTest: 0.15 }),
 };
 const cube = new THREE.BoxGeometry(1, 1, 1);
-const blockTypes = ['grass', 'dirt', 'stone', 'log', 'leaves'];
+const blockTypes = ['grass', 'dirt', 'stone', 'log', 'leaves', 'planks', 'sand', 'brick'];
 let meshes = [];
 function renderWorld() {
   for (const mesh of meshes) scene.remove(mesh);
@@ -228,12 +231,37 @@ function showCracks(hit, progress) {
 }
 
 renderer.domElement.addEventListener('mousedown', (event) => {
+  if (event.button === 2 && gameStarted) {
+    event.preventDefault();
+    const target = targetedBlock();
+    if (!target) return;
+    const type = hotbarTypes[selectedSlot];
+    const result = placeBlock(world, target.key, target.hit.face.normal, type, inventory, {
+      x: camera.position.x,
+      y: camera.position.y - eyeHeight,
+      z: camera.position.z,
+    });
+    if (result.placed) {
+      inventory = result.inventory;
+      renderWorld();
+      renderHotbar();
+      statusLabel.textContent = `${type} placed`;
+    } else if (result.reason === 'empty-inventory') {
+      statusLabel.textContent = `No ${type} blocks in this slot`;
+    } else if (result.reason === 'occupied') {
+      statusLabel.textContent = 'That space is occupied';
+    } else if (result.reason === 'player-overlap') {
+      statusLabel.textContent = 'Cannot place a block inside yourself';
+    }
+    return;
+  }
   if (event.button !== 0 || !gameStarted) return;
   const target = targetedBlock();
   if (!target) return;
   miningHeld = true;
   miningSession = beginMining(target.key, target.type);
 });
+renderer.domElement.addEventListener('contextmenu', (event) => event.preventDefault());
 addEventListener('mouseup', (event) => {
   if (event.button !== 0 || !miningHeld) return;
   miningHeld = false;
