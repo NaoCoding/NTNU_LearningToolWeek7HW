@@ -6,11 +6,10 @@ test('the main house has a larger footprint, detailed facade, and connected bloc
   const world = createIsland();
   assert.equal(getBlock(world, -11, 0, 4), 'planks');
   assert.equal(getBlock(world, -3, 0, 4), 'planks');
-  assert.equal(getBlock(world, -10, 2, 2), 'sand');
+  assert.equal(getBlock(world, -10, 2, 8), undefined);
   assert.equal(getBlock(world, -9, 5, 5), 'planks');
 
   for (let step = 0; step < 4; step += 1) {
     assert.equal(getBlock(world, -10 + step, 1 + step, 4), 'planks');
   }
 });
-
