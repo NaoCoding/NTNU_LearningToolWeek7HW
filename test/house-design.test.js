@@ -10,6 +10,6 @@ test('the main house has a larger footprint, detailed facade, and connected bloc
   assert.equal(getBlock(world, -9, 5, 5), 'planks');
 
   for (let step = 0; step < 4; step += 1) {
-    assert.equal(getBlock(world, -10 + step, 1 + step, 4), 'planks');
+    assert.equal(getBlock(world, -7, 1 + step, 7 - step), 'planks');
   }
 });
