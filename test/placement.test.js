@@ -7,20 +7,20 @@ const playerAwayFromTarget = { x: -3.5, y: 1, z: 3.5 };
 
 test('placing a selected block on the targeted face adds one block and decrements inventory', () => {
   const world = createIsland();
-  const result = placeBlock(world, blockKey(0, 0, 0), { x: 1, y: 0, z: 0 }, 'stone', { stone: 1 }, playerAwayFromTarget);
+  const result = placeBlock(world, blockKey(0, 0, 0), { x: 0, y: 1, z: 0 }, 'stone', { stone: 1 }, playerAwayFromTarget);
 
   assert.equal(result.placed, true);
-  assert.equal(getBlock(world, 1, 0, 0), 'stone');
+  assert.equal(getBlock(world, 0, 1, 0), 'stone');
   assert.equal(result.inventory.stone, 0);
 });
 
 test('zero inventory cannot place a block', () => {
   const world = createIsland();
-  const result = placeBlock(world, blockKey(0, 0, 0), { x: 1, y: 0, z: 0 }, 'stone', { stone: 0 }, playerAwayFromTarget);
+  const result = placeBlock(world, blockKey(0, 0, 0), { x: 0, y: 1, z: 0 }, 'stone', { stone: 0 }, playerAwayFromTarget);
 
   assert.equal(result.placed, false);
   assert.equal(result.reason, 'empty-inventory');
-  assert.equal(getBlock(world, 1, 0, 0), undefined);
+  assert.equal(getBlock(world, 0, 1, 0), undefined);
 });
 
 test('an occupied target face cannot be overwritten', () => {
@@ -34,8 +34,8 @@ test('an occupied target face cannot be overwritten', () => {
 
 test('a block cannot be placed inside the player', () => {
   const world = createIsland();
-  const playerBesideTarget = { x: 1.5, y: 0, z: 0.5 };
-  const result = placeBlock(world, blockKey(0, 0, 0), { x: 1, y: 0, z: 0 }, 'stone', { stone: 1 }, playerBesideTarget);
+  const playerBesideTarget = { x: 0.5, y: 1, z: 0.5 };
+  const result = placeBlock(world, blockKey(0, 0, 0), { x: 0, y: 1, z: 0 }, 'stone', { stone: 1 }, playerBesideTarget);
 
   assert.equal(result.placed, false);
   assert.equal(result.reason, 'player-overlap');
