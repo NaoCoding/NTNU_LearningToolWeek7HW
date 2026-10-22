@@ -5,6 +5,8 @@ import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 import { advancePlayerVertical } from './physics.js';
 import { worldLightLevelsAt } from './lighting.js';
 import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
+import { PLAYER_MODEL_PARTS } from './avatar.js';
+import { togglePerspective } from './view-mode.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -24,6 +26,7 @@ scene.fog = new THREE.Fog('#bfe0f4', 18, 45);
 const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 100);
 camera.position.copy(startingPosition);
 camera.lookAt(0.5, 1.75, -4);
+const thirdPersonCamera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.1, 100);
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
 renderer.setSize(innerWidth, innerHeight);
@@ -91,7 +94,8 @@ const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
 controls.minPolarAngle = Math.PI * 0.08;
 let gameStarted = false;
-const controlHint = 'WASD move · Space jump · Hold left to mine · Right to place · 1–8 select · R rain';
+let thirdPerson = false;
+const controlHint = 'WASD move · Space jump · V view · Hold left to mine · Right to place · 1–8 select · R rain';
 startButton.addEventListener('click', () => {
   gameStarted = true;
   startButton.hidden = true;
@@ -116,9 +120,47 @@ const keys = new Set();
 let verticalVelocity = 0;
 let grounded = false;
 const eyeHeight = 1.65;
+const avatar = new THREE.Group();
+for (const part of PLAYER_MODEL_PARTS) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(...part.size),
+    new THREE.MeshLambertMaterial({ color: part.color }),
+  );
+  mesh.position.set(...part.position);
+  avatar.add(mesh);
+}
+avatar.visible = false;
+scene.add(avatar);
+
+const firstPersonHand = new THREE.Group();
+const sleeve = new THREE.Mesh(
+  new THREE.BoxGeometry(0.22, 0.34, 0.22),
+  new THREE.MeshBasicMaterial({ color: '#168f92' }),
+);
+sleeve.position.y = -0.07;
+firstPersonHand.add(sleeve);
+const hand = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2, 0.19, 0.23),
+  new THREE.MeshBasicMaterial({ color: '#e8b98f' }),
+);
+hand.position.set(0, -0.31, -0.015);
+firstPersonHand.add(hand);
+firstPersonHand.position.set(0.42, -0.31, -0.62);
+firstPersonHand.rotation.x = -0.2;
+firstPersonHand.rotation.z = -0.1;
+camera.add(firstPersonHand);
+
+function setPerspective(isThirdPerson) {
+  thirdPerson = isThirdPerson;
+  avatar.visible = thirdPerson;
+  firstPersonHand.visible = !thirdPerson;
+  statusLabel.textContent = thirdPerson ? 'Third-person view · V to switch' : 'First-person view · V to switch';
+}
+
 addEventListener('keydown', (event) => {
   keys.add(event.code);
   if (event.code === 'KeyR' && gameStarted && !event.repeat) setRain(toggleRain(rainEnabled));
+  if (event.code === 'KeyV' && gameStarted && !event.repeat) setPerspective(togglePerspective(thirdPerson));
   if (/^Digit[1-8]$/.test(event.code)) {
     selectedSlot = Number(event.code.slice(-1)) - 1;
     renderHotbar();
@@ -382,7 +424,18 @@ function tick() {
   }
   updateDropMeshes(delta);
   updateRain(delta);
-  renderer.render(scene, camera);
+  if (thirdPerson) {
+    controls.getDirection(look);
+    const horizontalLength = Math.hypot(look.x, look.z) || 1;
+    const directionX = look.x / horizontalLength;
+    const directionZ = look.z / horizontalLength;
+    const feetY = camera.position.y - eyeHeight;
+    avatar.position.set(camera.position.x, feetY, camera.position.z);
+    avatar.rotation.y = Math.atan2(directionX, -directionZ);
+    thirdPersonCamera.position.set(camera.position.x - directionX * 4.5, feetY + 2.65, camera.position.z - directionZ * 4.5);
+    thirdPersonCamera.lookAt(camera.position.x, feetY + 1.0, camera.position.z);
+  }
+  renderer.render(scene, thirdPerson ? thirdPersonCamera : camera);
 }
 renderer.setAnimationLoop(tick);
 
@@ -404,5 +457,7 @@ updateDayNight(0);
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
+  thirdPersonCamera.aspect = innerWidth / innerHeight;
+  thirdPersonCamera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
