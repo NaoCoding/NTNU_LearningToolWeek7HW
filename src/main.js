@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
+import { advancePlayerVertical } from './physics.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -336,18 +337,14 @@ function tick() {
     if (!canOccupyPlayer(world, feet)) camera.position.set(before.x, camera.position.y, before.z);
 
     if (grounded && keys.has('Space')) { verticalVelocity = 6.2; grounded = false; }
-    verticalVelocity -= 18 * delta;
-    camera.position.y += verticalVelocity * delta;
-    const nextFeet = { x: camera.position.x, y: camera.position.y - eyeHeight, z: camera.position.z };
-    if (!canOccupyPlayer(world, nextFeet)) {
-      if (verticalVelocity <= 0) {
-        camera.position.y = 1 + eyeHeight;
-        grounded = true;
-      } else {
-        camera.position.y = before.y;
-      }
-      verticalVelocity = 0;
-    } else grounded = false;
+    const vertical = advancePlayerVertical(world, {
+      x: camera.position.x,
+      y: camera.position.y - eyeHeight,
+      z: camera.position.z,
+    }, verticalVelocity, grounded, delta);
+    camera.position.y = vertical.position.y + eyeHeight;
+    verticalVelocity = vertical.velocityY;
+    grounded = vertical.grounded;
 
     const target = targetedBlock();
     if (miningHeld && target) {
