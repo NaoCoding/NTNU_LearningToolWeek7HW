@@ -10,6 +10,8 @@ import { togglePerspective } from './view-mode.js';
 import { consumeJumpRequest } from './player-input.js';
 import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
 import { SCENERY_DETAILS } from './scenery-details.js';
+import { ANIMAL_MODELS } from './animal-models.js';
+import { SHADOW_MAP_SIZE } from './visual-effects.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -34,13 +36,24 @@ const thirdPersonCamera = new THREE.PerspectiveCamera(72, innerWidth / innerHeig
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'low-power' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = false;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 game.prepend(renderer.domElement);
 
 const hemisphere = new THREE.HemisphereLight('#e8f6ff', '#715a3c', 2.1);
 scene.add(hemisphere);
 const sunlight = new THREE.DirectionalLight('#fff1cf', 2.0);
 sunlight.position.set(-8, 14, 7);
+sunlight.castShadow = true;
+sunlight.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+sunlight.shadow.camera.left = -18;
+sunlight.shadow.camera.right = 18;
+sunlight.shadow.camera.top = 20;
+sunlight.shadow.camera.bottom = -15;
+sunlight.shadow.camera.near = 1;
+sunlight.shadow.camera.far = 45;
+sunlight.shadow.bias = -0.0004;
+sunlight.shadow.radius = 3;
 scene.add(sunlight);
 const daySky = new THREE.Color('#bfe0f4');
 const nightSky = new THREE.Color('#101a38');
@@ -80,6 +93,8 @@ function renderWorld() {
     const entries = [...world.entries()].filter(([, blockType]) => blockType === type);
     if (entries.length === 0) continue;
     const mesh = new THREE.InstancedMesh(cube, materials[type], entries.length);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     mesh.userData.blockKeys = entries.map(([key]) => key);
     const matrix = new THREE.Matrix4();
     entries.forEach(([key], index) => {
@@ -110,6 +125,8 @@ for (const detail of SCENERY_DETAILS) {
   }
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(...detail.position);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
   scene.add(mesh);
   if (detail.glow) {
     const light = new THREE.PointLight(detail.color, 0, 6);
@@ -118,6 +135,24 @@ for (const detail of SCENERY_DETAILS) {
     lanternLights.push(light);
   }
 }
+
+const animalActors = ANIMAL_MODELS.map((animal) => {
+  const group = new THREE.Group();
+  group.position.set(...animal.position);
+  scene.add(group);
+  for (const detail of animal.parts) {
+    const geometry = detail.shape === 'sphere'
+      ? new THREE.SphereGeometry(0.5, 8, 6)
+      : new THREE.BoxGeometry(1, 1, 1);
+    const mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: detail.color }));
+    mesh.position.set(...detail.position);
+    mesh.scale.set(...detail.size);
+    mesh.castShadow = animal.castShadow;
+    mesh.receiveShadow = true;
+    group.add(mesh);
+  }
+  return { group, phase: animal.phase };
+});
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
@@ -158,6 +193,8 @@ for (const part of PLAYER_MODEL_PARTS) {
     new THREE.BoxGeometry(...part.size),
     new THREE.MeshLambertMaterial({ color: part.color }),
   );
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
   if (part.name === 'head' || part.name === 'hair') {
     mesh.position.set(part.position[0], part.position[1] - 1.61, part.position[2]);
     avatarHead.add(mesh);
@@ -499,6 +536,10 @@ function tick() {
   firstPersonHand.rotation.z = -0.1 + motion.handRotationZ;
   updateDropMeshes(delta);
   updateRain(delta);
+  animalActors.forEach(({ group, phase }) => {
+    group.position.y = 1 + Math.sin(clock.elapsedTime * 2.2 + phase) * 0.025;
+    group.rotation.y = Math.sin(clock.elapsedTime * 0.7 + phase) * 0.08;
+  });
   if (thirdPerson) {
     const feetY = camera.position.y - eyeHeight;
     avatar.position.set(camera.position.x, feetY, camera.position.z);
