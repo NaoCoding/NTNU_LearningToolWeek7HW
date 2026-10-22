@@ -35,7 +35,7 @@ function addTwoStoryHouse(blocks) {
   for (let y = 1; y <= 3; y += 1) {
     for (let x = minX; x <= maxX; x += 1) {
       for (const z of [minZ, maxZ]) {
-        const isDoor = z === maxZ && (x === centerX || x === centerX + 1) && y <= 2;
+        const isDoor = (z === minZ || z === maxZ) && (x === centerX || x === centerX + 1) && y <= 2;
         if (isDoor) continue;
         if (isWindow(x, z, y)) continue;
         blocks.set(blockKey(x, y, z), Math.abs(x - centerX) === 4 && Math.abs(z - centerZ) === 4 ? 'stone' : 'brick');
@@ -87,6 +87,7 @@ function addTwoStoryHouse(blocks) {
       blocks.set(blockKey(x, 5, maxZ + 1), 'log');
     }
   }
+  for (let x = centerX; x <= centerX + 1; x += 1) blocks.set(blockKey(x, 0, minZ - 1), 'planks');
   for (let x = centerX - 2; x <= centerX + 2; x += 2) blocks.set(blockKey(x, 5, maxZ + 1), 'log');
   for (let x = minX + 2; x < centerX; x += 1) {
     blocks.set(blockKey(x, 5, centerZ + 1), 'log');
