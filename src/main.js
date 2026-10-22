@@ -57,7 +57,7 @@ sunlight.shadow.bias = -0.0004;
 sunlight.shadow.radius = 3;
 scene.add(sunlight);
 const daySky = new THREE.Color('#bfe0f4');
-const nightSky = new THREE.Color('#101a38');
+const nightSky = new THREE.Color('#0b1229');
 const daySun = new THREE.Color('#fff1cf');
 const nightSun = new THREE.Color('#8296c7');
 
@@ -569,8 +569,8 @@ function updateDayNight(elapsedSeconds) {
   const daylight = daylightAt(elapsedSeconds, 120);
   const darkness = 1 - daylight;
   for (const lantern of lanternLights) lantern.intensity = darkness * 1.4;
-  const lightLevels = worldLightLevelsAt(daylight);
-  scene.background.copy(daySky).lerp(nightSky, darkness);
+  const lightLevels = worldLightLevelsAt(daylight, rainEnabled);
+  scene.background.copy(daySky).lerp(nightSky, lightLevels.skyDarkness);
   scene.fog.color.copy(scene.background);
   sunlight.intensity = lightLevels.sunlight;
   sunlight.color.copy(daySun).lerp(nightSun, darkness);
