@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#bfe0f4">
+    <title>Sky Island</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <main id="game" aria-label="Sky Island voxel game">
+      <div id="hud" aria-live="polite">
+        <div class="topline"><span class="brand">SKY ISLAND</span><span id="status">Ready to explore</span></div>
+        <div class="crosshair" aria-hidden="true"></div>
+        <div class="bottomline"><span id="help">WASD move · Space jump · Click to start</span><div id="hotbar" aria-label="Block inventory"></div></div>
+      </div>
+      <button id="start" type="button">Enter the island</button>
+      <noscript>This game needs JavaScript enabled.</noscript>
+    </main>
+  </body>
+</html>

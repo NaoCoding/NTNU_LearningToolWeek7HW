@@ -2,7 +2,7 @@
 
 One step at a time. For each step, write tests, run them red, commit the tests, implement, run the complete test suite, then commit the green implementation. Stop and report after each step.
 
-- [ ] **Step 0 — Island and movement.** Establish the static Three.js page and test runner; create a small bounded island and player movement/collision. Verify: STEP 0.
+- [x] **Step 0 — Island and movement.** Establish the static Three.js page and test runner; create a small bounded island and player movement/collision. Verify: STEP 0. Automated checks pass; browser preview shows the island scene and start HUD.
 - [ ] **Step 1 — Mining.** Add hold-to-mine timing, crack feedback, cancellation on release, and slower stone mining. Verify: STEP 1.
 - [ ] **Step 2 — Drops.** Spawn same-type drops and make them settle on the island. Verify: STEP 2.
 - [ ] **Step 3 — Collection.** Collect only within range and add the matching inventory count. Verify: STEP 3.

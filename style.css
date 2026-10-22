@@ -1,0 +1,22 @@
+:root { color-scheme: dark; font-family: Manrope, system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body, #game { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+body { background: #bfe0f4; }
+canvas { display: block; width: 100%; height: 100%; }
+#hud { position: fixed; inset: 0; z-index: 2; pointer-events: none; color: #fff; text-shadow: 0 2px 6px #14344780; }
+.topline { display: flex; justify-content: space-between; align-items: center; padding: 22px 28px; letter-spacing: .1em; }
+.brand { font-size: 12px; font-weight: 800; letter-spacing: .22em; }
+#status { font: 12px 'DM Mono', monospace; color: #f3f8fc; }
+.crosshair { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; transform: translate(-50%,-50%); }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: #fff; border: 1px solid #28445399; border-radius: 2px; }
+.crosshair::before { width: 2px; height: 18px; left: 8px; }
+.crosshair::after { width: 18px; height: 2px; top: 8px; }
+.bottomline { position: absolute; inset: auto 0 0; display: flex; align-items: end; justify-content: space-between; padding: 22px 28px; }
+#help { color: #f8fbff; font-size: 12px; }
+#hotbar { display: flex; gap: 5px; }
+.slot { width: 54px; height: 54px; display: grid; place-items: center; background: #132b36b8; border: 1px solid #ffffff55; border-radius: 8px; color: white; font: 11px 'DM Mono', monospace; }
+.slot.selected { outline: 2px solid #f4c05a; outline-offset: 1px; }
+.slot img { width: 34px; height: 34px; image-rendering: pixelated; object-fit: contain; }
+#start { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, 55px); z-index: 3; border: 0; border-radius: 999px; padding: 12px 22px; background: #f0b64c; color: #26313a; font: 800 13px Manrope, sans-serif; cursor: pointer; box-shadow: 0 8px 24px #172f3c40; }
+#start:hover { background: #ffd071; }
+@media (max-width: 600px) { .topline { padding: 16px; } .bottomline { align-items: center; flex-direction: column-reverse; gap: 16px; padding: 16px; } .slot { width: 43px; height: 45px; } .slot img { width: 28px; height: 28px; } }
