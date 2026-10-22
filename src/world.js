@@ -1,3 +1,5 @@
+import { addCottage } from './cottage.js';
+
 export const MAX_WORLD_SIZE = 32;
 export const PLAYER_RADIUS = 0.28;
 export const PLAYER_HEIGHT = 1.65;
@@ -25,6 +27,9 @@ export function createIsland(width = 28, depth = 28) {
         blocks.set(blockKey(x, -2, z), 'stone');
       }
     }
+  }
+  if (width >= 24 && depth >= 24) {
+    addCottage(blocks);
   }
   for (const [treeX, treeZ] of [[left + 3, front + 3], [left + width - 4, front + 3]]) {
     if (treeX < left + 1 || treeX > left + width - 2 || treeZ < front + 1 || treeZ > front + depth - 2) continue;
