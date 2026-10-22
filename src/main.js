@@ -9,6 +9,7 @@ import { FIRST_PERSON_HAND_ORIGIN, FIRST_PERSON_HAND_PARTS, PLAYER_MODEL_PARTS }
 import { togglePerspective } from './view-mode.js';
 import { consumeJumpRequest } from './player-input.js';
 import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
+import { SCENERY_DETAILS } from './scenery-details.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -92,6 +93,31 @@ function renderWorld() {
   }
 }
 renderWorld();
+
+const lanternLights = [];
+for (const detail of SCENERY_DETAILS) {
+  let geometry;
+  let material;
+  if (detail.shape === 'cone') {
+    geometry = new THREE.ConeGeometry(detail.radius, detail.height, 4);
+    material = materials[detail.texture];
+  } else if (detail.shape === 'octahedron') {
+    geometry = new THREE.OctahedronGeometry(detail.radius, 0);
+    material = new THREE.MeshBasicMaterial({ color: detail.color });
+  } else {
+    geometry = new THREE.BoxGeometry(...detail.size);
+    material = new THREE.MeshBasicMaterial({ color: detail.color, transparent: true, opacity: 0.62 });
+  }
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(...detail.position);
+  scene.add(mesh);
+  if (detail.glow) {
+    const light = new THREE.PointLight(detail.color, 0, 6);
+    light.position.copy(mesh.position);
+    scene.add(light);
+    lanternLights.push(light);
+  }
+}
 
 const controls = new PointerLockControls(camera, renderer.domElement);
 controls.maxPolarAngle = Math.PI * 0.92;
@@ -479,6 +505,7 @@ renderer.setAnimationLoop(tick);
 function updateDayNight(elapsedSeconds) {
   const daylight = daylightAt(elapsedSeconds, 120);
   const darkness = 1 - daylight;
+  for (const lantern of lanternLights) lantern.intensity = darkness * 1.4;
   const lightLevels = worldLightLevelsAt(daylight);
   scene.background.copy(daySky).lerp(nightSky, darkness);
   scene.fog.color.copy(scene.background);
