@@ -12,7 +12,7 @@ import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './av
 import { SCENERY_DETAILS } from './scenery-details.js';
 import { ANIMAL_MODELS } from './animal-models.js';
 import { createAnimalStates, getAnimalPose, updateAnimalMovement } from './animal-motion.js';
-import { SHADOW_MAP_SIZE } from './visual-effects.js';
+import { LANTERN_LIGHT_DISTANCE, SHADOW_MAP_SIZE, lanternIntensityAt } from './visual-effects.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -133,7 +133,7 @@ for (const detail of SCENERY_DETAILS) {
   mesh.receiveShadow = true;
   scene.add(mesh);
   if (detail.glow) {
-    const light = new THREE.PointLight(detail.color, 0, 6);
+    const light = new THREE.PointLight(detail.color, 0, LANTERN_LIGHT_DISTANCE);
     light.position.copy(mesh.position);
     scene.add(light);
     lanternLights.push(light);
@@ -571,7 +571,7 @@ renderer.setAnimationLoop(tick);
 function updateDayNight(elapsedSeconds) {
   const daylight = daylightAt(elapsedSeconds, 120);
   const darkness = 1 - daylight;
-  for (const lantern of lanternLights) lantern.intensity = darkness * 1.4;
+  for (const lantern of lanternLights) lantern.intensity = lanternIntensityAt(darkness);
   const lightLevels = worldLightLevelsAt(daylight, rainEnabled);
   scene.background.copy(daySky).lerp(nightSky, lightLevels.skyDarkness);
   scene.fog.color.copy(scene.background);
