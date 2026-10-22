@@ -1,11 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRainParticle, isSheltered, toggleRain, updateRainParticles } from '../src/gameplay.js';
+import { createRainParticle, DEFAULT_RAIN_ENABLED, isSheltered, toggleRain, updateRainParticles } from '../src/gameplay.js';
 import { blockKey, createIsland, getWorldBounds } from '../src/world.js';
 
 test('R toggles rain on and off', () => {
   assert.equal(toggleRain(false), true);
   assert.equal(toggleRain(true), false);
+});
+
+test('rain is enabled by default when the game starts', () => {
+  assert.equal(DEFAULT_RAIN_ENABLED, true);
 });
 
 test('a solid roof shelters the player directly below it', () => {
