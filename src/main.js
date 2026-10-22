@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { advanceMining, beginMining, cancelMining, collectNearbyDrops, createDrop, createRainParticle, daylightAt, hasFallenIntoVoid, placeBlock, toggleRain, updateDrops, updateRainParticles } from './gameplay.js';
 import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
-import { advancePlayerVertical } from './physics.js';
+import { advancePlayerVertical, playerMovementSpeed } from './physics.js';
 import { worldLightLevelsAt } from './lighting.js';
 import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
 import { PLAYER_MODEL_PARTS } from './avatar.js';
@@ -95,7 +95,7 @@ controls.maxPolarAngle = Math.PI * 0.92;
 controls.minPolarAngle = Math.PI * 0.08;
 let gameStarted = false;
 let thirdPerson = false;
-const controlHint = 'WASD move · Space jump · V view · Hold left to mine · Right to place · 1–8 select · R rain';
+const controlHint = 'WASD move · Shift run · Space jump · V view · Hold left to mine · Right to place · 1–8 select · R rain';
 startButton.addEventListener('click', () => {
   gameStarted = true;
   startButton.hidden = true;
@@ -375,7 +375,7 @@ function tick() {
   if (gameStarted) {
     const forward = Number(keys.has('KeyW')) - Number(keys.has('KeyS'));
     const side = Number(keys.has('KeyD')) - Number(keys.has('KeyA'));
-    const speed = 4.5 * delta;
+    const speed = playerMovementSpeed(keys.has('ShiftLeft') || keys.has('ShiftRight')) * delta;
     const before = camera.position.clone();
     if (forward) controls.moveForward(forward * speed);
     if (side) controls.moveRight(side * speed);

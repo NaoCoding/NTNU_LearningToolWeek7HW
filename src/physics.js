@@ -1,5 +1,9 @@
 import { blockKey, canOccupyPlayer, PLAYER_RADIUS } from './world.js';
 
+export function playerMovementSpeed(isRunning) {
+  return isRunning ? 7.2 : 4.5;
+}
+
 function supportAt(blocks, position, minTop, maxTop) {
   let supportY = null;
   const minX = Math.floor(position.x - PLAYER_RADIUS);
