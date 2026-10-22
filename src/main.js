@@ -5,10 +5,10 @@ import { blockKey, canOccupyPlayer, createIsland, getBlock } from './world.js';
 import { advancePlayerVertical, playerMovementSpeed } from './physics.js';
 import { worldLightLevelsAt } from './lighting.js';
 import { DEFAULT_RAIN_ENABLED } from './gameplay.js';
-import { PLAYER_MODEL_PARTS } from './avatar.js';
+import { FIRST_PERSON_HAND_ORIGIN, FIRST_PERSON_HAND_PARTS, PLAYER_MODEL_PARTS } from './avatar.js';
 import { togglePerspective } from './view-mode.js';
 import { consumeJumpRequest } from './player-input.js';
-import { getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
+import { getAvatarFacing, getAvatarMotion, getThirdPersonCameraPose } from './avatar-motion.js';
 
 const game = document.querySelector('#game');
 const startButton = document.querySelector('#start');
@@ -148,19 +148,15 @@ avatar.visible = false;
 scene.add(avatar);
 
 const firstPersonHand = new THREE.Group();
-const sleeve = new THREE.Mesh(
-  new THREE.BoxGeometry(0.24, 0.36, 0.25),
-  new THREE.MeshBasicMaterial({ color: '#168f92' }),
-);
-sleeve.position.y = -0.015;
-firstPersonHand.add(sleeve);
-const hand = new THREE.Mesh(
-  new THREE.BoxGeometry(0.21, 0.19, 0.25),
-  new THREE.MeshBasicMaterial({ color: '#e8b98f' }),
-);
-hand.position.set(0, -0.19, -0.015);
-firstPersonHand.add(hand);
-firstPersonHand.position.set(0.3, -0.02, -0.52);
+for (const part of FIRST_PERSON_HAND_PARTS) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(...part.size),
+    new THREE.MeshBasicMaterial({ color: part.color }),
+  );
+  mesh.position.set(...part.position);
+  firstPersonHand.add(mesh);
+}
+firstPersonHand.position.set(...FIRST_PERSON_HAND_ORIGIN);
 firstPersonHand.rotation.x = -0.2;
 firstPersonHand.rotation.z = -0.1;
 camera.add(firstPersonHand);
@@ -390,15 +386,26 @@ addEventListener('mouseup', (event) => {
 function tick() {
   const delta = Math.min(clock.getDelta(), 0.05);
   updateDayNight(clock.elapsedTime);
+  let movementDirection = null;
   if (gameStarted) {
     const forward = Number(keys.has('KeyW')) - Number(keys.has('KeyS'));
     const side = Number(keys.has('KeyD')) - Number(keys.has('KeyA'));
     const speed = playerMovementSpeed(keys.has('ShiftLeft') || keys.has('ShiftRight')) * delta;
+    controls.getDirection(look);
+    const lookLength = Math.hypot(look.x, look.z) || 1;
+    const forwardX = look.x / lookLength;
+    const forwardZ = look.z / lookLength;
+    const moveX = forward * forwardX - side * forwardZ;
+    const moveZ = forward * forwardZ + side * forwardX;
+    const moveLength = Math.hypot(moveX, moveZ);
     const before = camera.position.clone();
-    if (forward) controls.moveForward(forward * speed);
-    if (side) controls.moveRight(side * speed);
+    if (moveLength > 0) {
+      camera.position.x += (moveX / moveLength) * speed;
+      camera.position.z += (moveZ / moveLength) * speed;
+    }
     const feet = { x: camera.position.x, y: camera.position.y - eyeHeight, z: camera.position.z };
     if (!canOccupyPlayer(world, feet)) camera.position.set(before.x, camera.position.y, before.z);
+    else if (moveLength > 0) movementDirection = { x: moveX / moveLength, z: moveZ / moveLength };
 
     const jump = consumeJumpRequest(jumpRequested, grounded);
     jumpRequested = jump.pending;
@@ -443,26 +450,24 @@ function tick() {
     }
   }
   controls.getDirection(look);
-  const moving = gameStarted && (keys.has('KeyW') || keys.has('KeyA') || keys.has('KeyS') || keys.has('KeyD'));
+  const moving = movementDirection !== null;
   const running = keys.has('ShiftLeft') || keys.has('ShiftRight');
   const motion = getAvatarMotion(clock.elapsedTime, moving, running, grounded, look.y);
+  const facing = getAvatarFacing(look, movementDirection);
   avatarParts.get('left-arm').rotation.x = motion.leftArmX;
   avatarParts.get('right-arm').rotation.x = motion.rightArmX;
   avatarParts.get('left-leg').rotation.x = motion.leftLegX;
   avatarParts.get('right-leg').rotation.x = motion.rightLegX;
-  avatarHead.rotation.x = motion.headPitch;
-  firstPersonHand.position.x = 0.3 + motion.handX;
-  firstPersonHand.position.y = -0.02 + motion.handY;
+  avatarHead.rotation.set(motion.headPitch, facing.headYaw, 0);
+  firstPersonHand.position.x = FIRST_PERSON_HAND_ORIGIN[0] + motion.handX;
+  firstPersonHand.position.y = FIRST_PERSON_HAND_ORIGIN[1] + motion.handY;
   firstPersonHand.rotation.z = -0.1 + motion.handRotationZ;
   updateDropMeshes(delta);
   updateRain(delta);
   if (thirdPerson) {
-    const horizontalLength = Math.hypot(look.x, look.z) || 1;
-    const directionX = look.x / horizontalLength;
-    const directionZ = look.z / horizontalLength;
     const feetY = camera.position.y - eyeHeight;
     avatar.position.set(camera.position.x, feetY, camera.position.z);
-    avatar.rotation.y = Math.atan2(directionX, -directionZ);
+    avatar.rotation.y = facing.bodyYaw;
     const pose = getThirdPersonCameraPose(camera.position, look);
     thirdPersonCamera.position.set(pose.position.x, pose.position.y, pose.position.z);
     thirdPersonCamera.lookAt(pose.target.x, pose.target.y, pose.target.z);

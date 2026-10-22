@@ -14,6 +14,21 @@ export function getAvatarMotion(elapsedSeconds, moving, running, grounded, lookY
   };
 }
 
+function yawFromDirection(direction) {
+  return Math.atan2(direction.x, -direction.z);
+}
+
+function wrapAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+export function getAvatarFacing(cursorDirection, movementDirection = null) {
+  const cursorYaw = yawFromDirection(cursorDirection);
+  const isMoving = movementDirection && Math.hypot(movementDirection.x, movementDirection.z) > 1e-6;
+  const bodyYaw = isMoving ? yawFromDirection(movementDirection) : cursorYaw;
+  return { bodyYaw, headYaw: wrapAngle(cursorYaw - bodyYaw) };
+}
+
 export function getThirdPersonCameraPose(eyePosition, lookDirection, distance = 4.5, verticalOffset = 0.8) {
   const length = Math.hypot(lookDirection.x, lookDirection.y, lookDirection.z) || 1;
   const direction = {
