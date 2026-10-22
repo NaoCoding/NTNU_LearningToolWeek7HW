@@ -32,19 +32,6 @@ export function createIsland(width = 28, depth = 28) {
   if (width >= 24 && depth >= 24) {
     addCottage(blocks);
   }
-  for (const [treeX, treeZ] of [[left + 3, front + 3], [left + width - 4, front + 3]]) {
-    if (treeX < left + 1 || treeX > left + width - 2 || treeZ < front + 1 || treeZ > front + depth - 2) continue;
-    for (let y = 1; y <= 3; y += 1) blocks.set(blockKey(treeX, y, treeZ), 'log');
-    for (let y = 3; y <= 4; y += 1) {
-      for (let z = treeZ - 1; z <= treeZ + 1; z += 1) {
-        for (let x = treeX - 1; x <= treeX + 1; x += 1) {
-          if (y === 3 && x === treeX && z === treeZ) continue;
-          blocks.set(blockKey(x, y, z), 'leaves');
-        }
-      }
-    }
-    blocks.set(blockKey(treeX, 5, treeZ), 'leaves');
-  }
   if (width >= 24 && depth >= 24) {
     addTrees(blocks);
   }
