@@ -21,8 +21,8 @@ function addTree(blocks, x, z, style) {
 
 export function addTrees(blocks) {
   const trees = [
-    [-11, -10, 0], [-7, -10, 1], [7, -10, 2], [11, -6, 0],
-    [-11, -1, 2], [10, 2, 1], [-10, 8, 0], [-5, 10, 2], [5, 10, 1], [10, 8, 2],
+    [-9, -10, 0], [-7, -10, 1], [7, -10, 2], [10, -6, 0],
+    [-11, -1, 2], [10, 2, 1], [-10, 8, 0], [-5, 10, 2], [5, 10, 1], [9, 7, 2],
   ];
   for (const [x, z, style] of trees) addTree(blocks, x, z, style);
 }

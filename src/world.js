@@ -19,14 +19,44 @@ export function createIsland(width = 28, depth = 28) {
   const blocks = new Map();
   const left = -Math.floor(width / 2);
   const front = -Math.floor(depth / 2);
+  const organicShape = width >= 24 && depth >= 24;
+  const centerX = left + (width - 1) / 2;
+  const centerZ = front + (depth - 1) / 2;
+  const radiusX = width / 2;
+  const radiusZ = depth / 2;
   for (let z = front; z < front + depth; z += 1) {
     for (let x = left; x < left + width; x += 1) {
-      blocks.set(blockKey(x, 0, z), 'grass');
-      if (x > left && x < left + width - 1 && z > front && z < front + depth - 1) {
-        blocks.set(blockKey(x, -1, z), 'dirt');
+      if (!organicShape) {
+        blocks.set(blockKey(x, 0, z), 'grass');
+        if (x > left && x < left + width - 1 && z > front && z < front + depth - 1) {
+          blocks.set(blockKey(x, -1, z), 'dirt');
+        }
+        if (x > left + 1 && x < left + width - 2 && z > front + 1 && z < front + depth - 2) {
+          blocks.set(blockKey(x, -2, z), 'stone');
+        }
+        continue;
       }
-      if (x > left + 1 && x < left + width - 2 && z > front + 1 && z < front + depth - 2) {
-        blocks.set(blockKey(x, -2, z), 'stone');
+
+      const radius = Math.hypot((x - centerX) / radiusX, (z - centerZ) / radiusZ);
+      const edgeNoise = 0.025 * Math.sin(x * 1.7 + z * 0.55) + 0.02 * Math.cos(z * 1.3 - x * 0.45);
+      const materialNoise = Math.abs(Math.sin(x * 12.9898 + z * 78.233) * 43758.5453) % 1;
+      const layers = [
+        { y: 0, radius: 1.02, material: 'surface' },
+        { y: -1, radius: 1.1, material: 'slope' },
+        { y: -2, radius: 0.9, material: 'stone' },
+        { y: -3, radius: 0.64, material: 'stone' },
+      ];
+      for (const layer of layers) {
+        if (radius > layer.radius + edgeNoise) continue;
+        let type = layer.material;
+        if (type === 'surface') {
+          if (radius > 0.84) type = materialNoise > 0.68 ? 'stone' : 'sand';
+          else if (radius > 0.62 && materialNoise > 0.96) type = 'stone';
+          else type = 'grass';
+        } else if (type === 'slope') {
+          type = radius > 0.92 || materialNoise > 0.82 ? 'stone' : 'dirt';
+        }
+        blocks.set(blockKey(x, layer.y, z), type);
       }
     }
   }
