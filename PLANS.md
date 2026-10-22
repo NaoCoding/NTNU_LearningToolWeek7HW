@@ -16,6 +16,7 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 11 — Natural island and character alignment.** Replace the default square grass top with an irregular shoreline, sandy beach, exposed stone, and a tapered rocky underside; scale the first-person hand down; make the third-person body face travel direction while the head and camera track the cursor. Verify: regression tests and the full suite pass (50 tests).
 - [x] **Step 12 — Detailed buildings, trees, and scenery.** Expand the main house with facade details, balcony, and a connected staircase; add taller varied tree silhouettes; add a custom roof, glass details, and lanterns using Three.js geometry. Verify: regression tests and the full suite pass (53 tests).
 - [x] **Step 13 — House windows, stair access, and living scenery.** Cut window openings into both house floors and fit translucent glass; allow grounded movement to step up only on the house staircase; add gently animated voxel rabbits and chickens with low-resolution scene shadows. Verify: regression tests and the full suite pass (58 tests).
+- [x] **Step 14 — Animal wandering, tower access, and house doors.** Let animals wander while checking ground support, walls, nearby animals, and the player; add an external stair route onto the cottage tower; open a matching rear doorway in the main house. Verify: regression tests and the full suite pass (63 tests).
 
 ## Plan changes
 
@@ -26,3 +27,4 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - Added Step 11 for the island silhouette and character alignment feedback. The default world keeps its 28-block bounding footprint, while smaller generated maps retain their simple rectangular test-fixture shape.
 - Added Step 12 for the latest scenery feedback. The enlarged house and stair fit within the fixed world bounds; tree profiles vary in height and canopy shape. Custom scenery uses Three.js geometry with the supplied brick material and built-in colors, without adding dependencies or pack assets.
 - Added Step 13 for the house and atmosphere follow-up. Window panes and animals use lightweight Three.js geometry; stair stepping is restricted to the house's marked treads. Shadows use a 512 × 512 directional shadow map to limit rendering cost.
+- Added Step 14 for movement and access follow-up. Animal movement uses short deterministic steps to avoid structures and island edges; the tower stair clears tree canopy from its headroom, and stair stepping recognizes only marked house/tower treads.
