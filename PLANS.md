@@ -14,6 +14,7 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 9 — Player movement and perspective.** Use fixed-size vertical physics substeps for consistent jumps, add a first/third-person toggle with a voxel avatar and visible first-person hand, and add Shift-to-run. Verify: regression tests and the full suite pass (40 tests).
 - [x] **Step 10 — Jump, avatar motion, and buildings.** Correct landing-height checks so a descending player stays airborne until contact; consume jump presses once; animate the first-person hand and third-person gait; track cursor pitch/yaw with the avatar and follow camera; add a two-story house and a small outbuilding. Verify: regression tests and the full suite pass (46 tests).
 - [x] **Step 11 — Natural island and character alignment.** Replace the default square grass top with an irregular shoreline, sandy beach, exposed stone, and a tapered rocky underside; scale the first-person hand down; make the third-person body face travel direction while the head and camera track the cursor. Verify: regression tests and the full suite pass (50 tests).
+- [x] **Step 12 — Detailed buildings, trees, and scenery.** Expand the main house with facade details, balcony, and a connected staircase; add taller varied tree silhouettes; add a custom roof, glass details, and lanterns using Three.js geometry. Verify: regression tests and the full suite pass (53 tests).
 
 ## Plan changes
 
@@ -22,3 +23,4 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - Added Step 9 for the requested jump feel, player model and perspective toggle, and running. The player model and visible hand are assembled from lightweight colored Three.js boxes, so no external assets or dependencies are needed.
 - Added Step 10 after follow-up play feedback. Airborne floor checks now require the floor surface to intersect the player's actual vertical sweep; the added buildings use supplied block textures and remain within the fixed world-size limit.
 - Added Step 11 for the island silhouette and character alignment feedback. The default world keeps its 28-block bounding footprint, while smaller generated maps retain their simple rectangular test-fixture shape.
+- Added Step 12 for the latest scenery feedback. The enlarged house and stair fit within the fixed world bounds; tree profiles vary in height and canopy shape. Custom scenery uses Three.js geometry with the supplied brick material and built-in colors, without adding dependencies or pack assets.
