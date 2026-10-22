@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advancePlayerVertical } from '../src/gameplay.js';
+import { advancePlayerVertical } from '../src/physics.js';
 import { createIsland } from '../src/world.js';
 
 test('vertical movement stays grounded at the island edge without alternating between falling and landing', () => {

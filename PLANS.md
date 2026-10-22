@@ -9,7 +9,8 @@ One step at a time. For each step, write tests, run them red, commit the tests, 
 - [x] **Step 4 — Placement.** Place a selected block on a valid neighboring face, reject zero inventory, and decrement the count. Verify: STEP 4. Four placement tests and the full suite pass. The success and player-overlap cases target open space above the island.
 - [x] **Step 5 — Rain.** Press R to toggle visible falling drops; shelter the player under the roof and keep rain out. Verify: STEP 5. Four rain/shelter tests and the full suite pass.
 - [x] **Step 6 — Day/night.** Transition sky and world lighting through day and night, then repeat without changing world or inventory state. Verify: STEP 6. Three cycle tests and the full suite pass.
+- [x] **Step 7 — Island and player safety fixes.** Expand the island footprint within the 32-block world limit; prevent near-player placement; stabilize vertical landing at island edges; respawn after falling into the void. Verify: regression tests and the full suite pass.
 
 ## Plan changes
 
-None yet.
+- Added Step 7 for the four requested gameplay fixes. The requested 50 × 50 × 50 example exceeds the fixed 32 × 32 × 32 course limit, so the default island footprint is 28 × 28 while remaining inside that limit.
